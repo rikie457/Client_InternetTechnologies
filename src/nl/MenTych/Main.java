@@ -1,15 +1,20 @@
 package nl.MenTych;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.Socket;
+import java.util.Scanner;
 
 public class Main {
 
 
 
     public static void main(String[] args) {
-      Client client = new Client("127.0.0.1", 1337);
+        Scanner scanner = new Scanner(System.in);
+        String username;
+
+        do {
+            System.out.print("Insert your username: ");
+            username = scanner.nextLine();
+        } while (!username.matches("(\\w)\\w+"));
+        Client client = new Client("127.0.0.1", 1337, username);
+
     }
 }

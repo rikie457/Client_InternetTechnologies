@@ -1,43 +1,54 @@
 package nl.MenTych;
 
-import java.io.*;
-import java.net.Socket;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 public class Client {
 
-    private Socket socket = null;
-    private InputStream input = null;
-    private OutputStream out = null;
+    private ConnectionHandler connection;
+    private BufferedReader reader;
+    private PrintWriter writer;
+    private String username;
 
-    public Client(String host, int port) {
+    public Client(String host, int port, String username) {
+        this.username = username;
         Scanner scanner = new Scanner(System.in);
-        // Maak verbinding met de server.// Alsje lokaal wilt verbinden het SERVER_ADDRESS “127.0.0.1”.
+
         try {
-            socket = new Socket(host, port);
-            System.out.println("Connected");
+            connection = new ConnectionHandler(host, port);
+            reader = connection.getReader();
+            writer = connection.getWriter();
+
+            writer.println("HELO " + username);
+            writer.flush();
+
+            while (!reader.readLine().contains("+OK HELO")) {
+                System.out.println("Connected user " + username);
+            }
+
+            Thread keeper = new Thread(new ConnectionKeeper(connection));
+            keeper.start();
+
+            while (!scanner.nextLine().equals("Disconnect")) {
+                String message = scanner.nextLine();
+                writer.println("BCST " + message);
+                writer.flush();
+            }
+
+            writer.println("QUIT");
+            writer.flush();
+            keeper.stop();
+            while (!reader.readLine().equals("+OK Goodbye")) {
+                System.out.println("Disconnected from the server");
+            }
 
 
-            // takes input from terminal
-            input = socket.getInputStream();
-
-            // sends output to the socket
-            out = socket.getOutputStream();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        PrintWriter writer = new PrintWriter(out);
-        try {
-            String line = reader.readLine();
-            while (!scanner.nextLine().equals("Over")) {
-                writer.println("BCST " + scanner.nextLine());
-                writer.flush();
-            }
-            } catch(IOException i){
-                System.out.println(i);
-            }
-        }
+
+    }
 
 
     }

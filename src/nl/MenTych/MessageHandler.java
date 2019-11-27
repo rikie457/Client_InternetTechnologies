@@ -1,5 +1,6 @@
 package nl.MenTych;
 
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,16 +9,15 @@ import java.io.PrintWriter;
 public class MessageHandler implements Runnable {
     private PrintWriter writer;
     private BufferedReader reader;
+    private JTextArea text;
 
     /**
-     * @param connection
-     *
-     * The message handler handles incomming messages from the server, including the heartbeat.
-     *
+     * @param connection The message handler handles incomming messages from the server, including the heartbeat.
      */
-    public MessageHandler(ConnectionHandler connection) {
+    public MessageHandler(ConnectionHandler connection, JTextArea text) {
         this.writer = connection.getWriter();
         this.reader = connection.getReader();
+        this.text = text;
     }
 
     @Override
@@ -30,10 +30,13 @@ public class MessageHandler implements Runnable {
 
                 // triggers when the recieved message hasn't been send by this client
                 if (!line.contains("+OK BCST")) {
-
                     // triggers when a message is send to all clients.
                     if (line.contains("BCST")) {
-                        messageRecieved(line);
+                        //Split up the message and sanitize the message.
+                        String name = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
+                        String[] parts = line.split("BCST \\[+\\w+\\]");
+                        String message = parts[1];
+                        messageRecieved(name + ": " + message);
                     }
 
                     // triggers when the server asks for a heartbeat.
@@ -42,8 +45,11 @@ public class MessageHandler implements Runnable {
                         sendHeartbeat();
                     }
                 } else {
-                    // the message send by this client had been recieved properly bij the server
-                    messageSendSuccessfully();
+                    // the message send by this client had been recieved properly by the server
+                    // also split up the message and sanitize the message.
+                    String[] parts = line.split("\\+OK BCST");
+                    String message = parts[1];
+                    messageSendSuccessfully("You: " + message);
                 }
 
             } catch (IOException e) {
@@ -52,18 +58,16 @@ public class MessageHandler implements Runnable {
         }
     }
 
-    private void messageSendSuccessfully() {
+    private void messageSendSuccessfully(String message) {
         Util.printLnWithColor(Util.Color.MAGENTA, "Message send.");
+        text.append(message + "\n");
     }
 
     private void messageRecieved(String message) {
-        Util.printLnWithColor(Util.Color.GREEN, "Message recieved.");
-        System.out.println(message);
+        text.append(message + "\n");
     }
 
     private void sendHeartbeat() {
-        Util.printLnWithColor(Util.Color.RED, "Found one!");
-
         // responding to the server.
         writer.println("PONG");
         writer.flush();

@@ -22,7 +22,7 @@ public class MessageHandler implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("recieving messages...");
+        System.out.println("Client is ready to send and recieve messages!\n");
 
         while (true) {
             try {
@@ -53,16 +53,16 @@ public class MessageHandler implements Runnable {
     }
 
     private void messageSendSuccessfully() {
-        Util.printWithColor(Util.Color.MAGENTA, "Message send.");
+        Util.printLnWithColor(Util.Color.MAGENTA, "Message send.");
     }
 
     private void messageRecieved(String message) {
-        Util.printWithColor(Util.Color.GREEN, "Message recieved.");
+        Util.printLnWithColor(Util.Color.GREEN, "Message recieved.");
         System.out.println(message);
     }
 
     private void sendHeartbeat() {
-        Util.printWithColor(Util.Color.RED, "Found one!");
+        Util.printLnWithColor(Util.Color.RED, "Found one!");
 
         // responding to the server.
         writer.println("PONG");

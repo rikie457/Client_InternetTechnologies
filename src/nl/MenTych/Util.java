@@ -28,9 +28,15 @@ public class Util {
         }
     }
 
-    public static void printWithColor(Color colorCode, String message) {
+    public static void printLnWithColor(Color colorCode, String message) {
         System.out.print(colorCode);
         System.out.println(message);
+        System.out.print(Color.RESET);
+    }
+
+    public static void printWithColor(Color colorCode, String message) {
+        System.out.print(colorCode);
+        System.out.print(message);
         System.out.print(Color.RESET);
     }
 }

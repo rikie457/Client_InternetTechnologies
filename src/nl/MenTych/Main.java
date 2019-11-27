@@ -12,8 +12,10 @@ public class Main {
         do {
             System.out.print("Insert your username: ");
             username = scanner.nextLine();
-        } while (!username.matches("(\\w)\\w+"));
-        Client client = new Client("127.0.0.1", 1337, username);
+        } while (!username.replace(" ", "_").matches("(\\w)\\w+"));
 
+        username = username.replace(" ", "_");
+
+        Client client = new Client("127.0.0.1", 1337, username);
     }
 }

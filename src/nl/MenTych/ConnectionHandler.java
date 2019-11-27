@@ -1,6 +1,7 @@
 package nl.MenTych;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
 
 public class ConnectionHandler {
@@ -18,7 +19,6 @@ public class ConnectionHandler {
         this.port = port;
 
         try {
-
             this.socket = new Socket(host, port);
             this.input = socket.getInputStream();
             this.output = socket.getOutputStream();
@@ -27,10 +27,9 @@ public class ConnectionHandler {
 
 
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-
     }
 
     Socket getSocket() {

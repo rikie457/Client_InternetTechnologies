@@ -10,6 +10,7 @@ public class Client {
     private BufferedReader reader;
     private PrintWriter writer;
     private String username;
+    private Thread keeper;
 
     public Client(String host, int port, String username) {
         this.username = username;
@@ -23,14 +24,18 @@ public class Client {
             writer.println("HELO " + username);
             writer.flush();
 
+            // user is connected to the server, printing username.
             while (!reader.readLine().contains("+OK HELO")) {
                 System.out.println("Connected user " + username);
             }
 
-            Thread keeper = new Thread(new ConnectionKeeper(connection));
-            keeper.start();
+            // starting messageHandler in new Thread.
+            Thread messageHandler = new Thread(new MessageHandler(connection));
+            messageHandler.start();
 
+            // sending messages happens here.
             while (!scanner.nextLine().equals("Disconnect")) {
+
                 String message = scanner.nextLine();
                 writer.println("BCST " + message);
                 writer.flush();
@@ -39,6 +44,8 @@ public class Client {
             writer.println("QUIT");
             writer.flush();
             keeper.stop();
+
+            // connection to server is lost or user is disconnected.
             while (!reader.readLine().equals("+OK Goodbye")) {
                 System.out.println("Disconnected from the server");
             }

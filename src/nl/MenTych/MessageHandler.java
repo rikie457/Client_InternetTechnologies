@@ -2,7 +2,6 @@ package nl.MenTych;
 
 import javax.swing.*;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.PrintWriter;
 
 
@@ -10,13 +9,15 @@ public class MessageHandler implements Runnable {
     private PrintWriter writer;
     private BufferedReader reader;
     private JTextArea text;
+    private Client ct;
 
     /**
      * @param connection The message handler handles incomming messages from the server, including the heartbeat.
      */
-    public MessageHandler(ConnectionHandler connection, JTextArea text) {
+    public MessageHandler(ConnectionHandler connection, JTextArea text, Client ct) {
         this.writer = connection.getWriter();
         this.reader = connection.getReader();
+        this.ct = ct;
         this.text = text;
     }
 
@@ -52,10 +53,12 @@ public class MessageHandler implements Runnable {
                     messageSendSuccessfully("You: " + message);
                 }
 
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                ct.stop();
+                break;
             }
         }
+
     }
 
     private void messageSendSuccessfully(String message) {
@@ -69,6 +72,7 @@ public class MessageHandler implements Runnable {
 
     private void sendHeartbeat() {
         // responding to the server.
+        System.out.println("SENDING PONG");
         writer.println("PONG");
         writer.flush();
     }

@@ -61,7 +61,7 @@ public class Client extends JFrame implements Runnable {
             }
 
             // starting messageHandler in new Thread.
-            Thread messageHandler = new Thread(new MessageHandler(connection, text));
+            Thread messageHandler = new Thread(new MessageHandler(connection, text, this));
             messageHandler.start();
 
             send.addActionListener(new ActionListener() {
@@ -93,6 +93,10 @@ public class Client extends JFrame implements Runnable {
             e.printStackTrace();
         }
 
+    }
+
+    void stop() {
+        this.stop();
     }
 }
 

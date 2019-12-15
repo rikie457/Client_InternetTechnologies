@@ -1,4 +1,4 @@
-package nl.MenTych.lvl1;
+package nl.MenTych;
 
 import javax.swing.*;
 import java.io.BufferedReader;
@@ -29,15 +29,27 @@ public class MessageHandler implements Runnable {
             try {
                 String line = this.reader.readLine();
                 String[] splits = line.split("\\s+");
-
-
                 if (line.equals("DSCN Pong timeout")) {
                     ct.stop();
                     System.out.println("STOPPING CLIENT");
                     kill();
                 }
 
-                if (!line.contains("+OK BCST")) {
+                if (line.contains("+VERSION 2")) {
+                    this.ct.createUI(this.ct, 2);
+                    System.out.println("VERSION 2");
+                }
+
+                // triggers when the recieved message hasn't been send by this client
+                if (line.contains("+OK CLIENTLIST")){
+                    String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
+                    messageRecieved("Clientlist" + ":");
+                    for (String member : members) {
+                        messageRecieved(" - " + member);
+                    }
+
+
+                } else if (!line.contains("+OK BCST")) {
                     // triggers when a message is send to all clients.
                     if (line.contains("BCST")) {
                         //Split up the message and sanitize the message.
@@ -52,6 +64,7 @@ public class MessageHandler implements Runnable {
                     if (line.equals("PING")) {
                         sendHeartbeat();
                     }
+
 
 
                 } else {

@@ -1,4 +1,4 @@
-package nl.MenTych.lvl1;
+package nl.MenTych;
 
 public class Util {
 

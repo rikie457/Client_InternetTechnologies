@@ -1,7 +1,6 @@
-package nl.MenTych.lvl1;
+package nl.MenTych;
 
 import java.io.*;
-import java.net.ConnectException;
 import java.net.Socket;
 
 public class ConnectionHandler {

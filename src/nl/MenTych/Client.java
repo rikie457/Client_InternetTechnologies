@@ -57,18 +57,6 @@ public class Client extends JFrame implements Runnable {
             writer.println("HELO " + username);
             writer.flush();
 
-
-            while (true) {
-                System.out.println(reader.readLine());
-                if (reader.readLine().equals("-ERR user already logged in")) {
-                    stop();
-                }
-
-                if (reader.readLine().contains("+OK HELO")) {
-                    break;
-                }
-            }
-
             // starting messageHandler in new Thread.
             messageHandler = new Thread(new MessageHandler(connection, text, this));
             messageHandler.start();
@@ -141,7 +129,7 @@ public class Client extends JFrame implements Runnable {
     }
 
     void stop() {
-        this.stop();
+        Thread.currentThread().stop();
     }
 }
 

@@ -23,12 +23,26 @@ public class MessageHandler implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Client is ready to send and recieve messages!\n");
 
-        while (true) {
-            try {
-                String line = this.reader.readLine();
+        try {
+            String line = this.reader.readLine();
+            while (!line.contains("+OK HELO")) {
+                line = this.reader.readLine();
+                if (line.equals("-ERR user already logged in") || line.equals("-ERR username has an invalid format (only characters, numbers and underscores are allowed")) {
+                    JOptionPane.showMessageDialog(ct, "Username already taken", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    ct.dispose();
+                    ct.stop();
+                    this.kill();
+                }
+            }
+
+            System.out.println("Client is ready to send and recieve messages!\n");
+
+            while (true) {
+                line = this.reader.readLine();
                 String[] splits = line.split("\\s+");
+
+
                 if (line.equals("DSCN Pong timeout")) {
                     ct.stop();
                     System.out.println("STOPPING CLIENT");
@@ -41,7 +55,7 @@ public class MessageHandler implements Runnable {
                 }
 
                 // triggers when the recieved message hasn't been send by this client
-                if (line.contains("+OK CLIENTLIST")){
+                if (line.contains("+OK CLIENTLIST")) {
                     String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
                     messageRecieved("Clientlist" + ":");
                     for (String member : members) {
@@ -66,7 +80,6 @@ public class MessageHandler implements Runnable {
                     }
 
 
-
                 } else {
                     // the message send by this client had been recieved properly by the server
                     // also split up the message and sanitize the message.
@@ -75,11 +88,10 @@ public class MessageHandler implements Runnable {
                     messageSendSuccessfully("You: " + message);
                 }
 
-            } catch (Exception e) {
-                ct.stop();
-                kill();
-                break;
             }
+        } catch (Exception e) {
+            ct.stop();
+            kill();
         }
 
     }

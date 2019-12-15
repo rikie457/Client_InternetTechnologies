@@ -1,4 +1,4 @@
-package nl.MenTych;
+package nl.MenTych.lvl1;
 
 import javax.swing.*;
 import java.io.BufferedReader;

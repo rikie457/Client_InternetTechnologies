@@ -1,4 +1,4 @@
-package nl.MenTych;
+package nl.MenTych.lvl2;
 
 import java.io.*;
 import java.net.ConnectException;

@@ -30,23 +30,21 @@ public class Main {
         frame.setVisible(true);
 
 
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                String username = usernameinput.getText();
+        button.addActionListener(actionEvent -> {
+            String username = usernameinput.getText();
 
-                if (!username.replace(" ", "_").matches("(\\w)\\w+")) {
-                    //Username is not correct so try again also make text red.
-                    usernameinput.setForeground(Color.red);
-                } else {
-                    //User name is correct. Create new thread and reset the input/panel.
-                    usernameinput.setForeground(Color.black);
-                    Thread client = new Thread(new Client("127.0.0.1", 1337, username));
-                    client.start();
-                    frame.revalidate();
-                    usernameinput.setText("");
-                }
+            if (!username.replace(" ", "_").matches("(\\w)\\w+")) {
+                //Username is not correct so try again also make text red.
+                usernameinput.setForeground(Color.red);
+            } else {
+                //User name is correct. Create new thread and reset the input/panel.
+                usernameinput.setForeground(Color.black);
+                Thread client = new Thread(new Client("127.0.0.1", 1337, username));
+                client.start();
+                frame.revalidate();
+                usernameinput.setText("");
             }
         });
     }
+
 }

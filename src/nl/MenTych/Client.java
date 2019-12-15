@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 
@@ -15,6 +17,7 @@ public class Client extends JFrame implements Runnable {
     private String username;
     private String host;
     private int port;
+    private Thread messageHandler;
 
     public Client(String host, int port, String username) {
         this.host = host;
@@ -35,9 +38,11 @@ public class Client extends JFrame implements Runnable {
         text.setEditable(false);
         JTextField input = new JTextField(10);
         JButton send = new JButton("Send");
+        JButton clientlist = new JButton("Clientlist");
         panel.add(scroll);
         panel.add(input);
         panel.add(send);
+        panel.add(clientlist);
         this.add(panel);
         this.setTitle(username);
         this.setSize(300, 400);
@@ -45,6 +50,19 @@ public class Client extends JFrame implements Runnable {
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setVisible(true);
+
+        JFrame frame = this;
+
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                writer.println("QUIT");
+                writer.flush();
+                messageHandler.stop();
+                frame.dispose();
+            }
+        });
 
         try {
             connection = new ConnectionHandler(host, port);
@@ -61,31 +79,34 @@ public class Client extends JFrame implements Runnable {
             }
 
             // starting messageHandler in new Thread.
-            Thread messageHandler = new Thread(new MessageHandler(connection, text, this));
+            messageHandler = new Thread(new MessageHandler(connection, text, this));
             messageHandler.start();
 
-            send.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    String message = input.getText();
-                    if (message.equals("Disconnect")) {
-                        writer.println("QUIT");
-                        writer.flush();
-                        messageHandler.stop();
+            clientlist.addActionListener(actionEvent -> {
+                writer.println("CLIENTLIST");
+                writer.flush();
 
-                        // connection to server is lost or user is disconnected.
-                        text.append("Disconnected from the server\n");
+            });
 
-                    }
+            send.addActionListener(actionEvent -> {
+                String message = input.getText();
 
-                    writer.println("BCST " + message);
+                if (message.equals("Disconnect")) {
+                    writer.println("QUIT");
                     writer.flush();
+                    messageHandler.stop();
 
-                    //Scroll down and clear the input
-                    JScrollBar vertical = scroll.getVerticalScrollBar();
-                    vertical.setValue(vertical.getMaximum());
-                    input.setText("");
+                    // connection to server is lost or user is disconnected.
+                    text.append("Disconnected from the server\n");
                 }
+                writer.println("BCST " + message);
+                writer.flush();
+
+
+                //Scroll down and clear the input
+                JScrollBar vertical = scroll.getVerticalScrollBar();
+                vertical.setValue(vertical.getMaximum());
+                input.setText("");
             });
 
 

@@ -28,17 +28,16 @@ public class MessageHandler implements Runnable {
         while (true) {
             try {
                 String line = this.reader.readLine();
-
-                // triggers when the recieved message hasn't been send by this client
-                if (line.contains("+OK CLIENTLIST")){
-                    String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
-                    messageRecieved("Clientlist" + ":");
-                    for (String member : members) {
-                        messageRecieved(" - " + member);
-                    }
+                String[] splits = line.split("\\s+");
 
 
-                } else if (!line.contains("+OK BCST")) {
+                if (line.equals("DSCN Pong timeout")) {
+                    ct.stop();
+                    System.out.println("STOPPING CLIENT");
+                    kill();
+                }
+
+                if (!line.contains("+OK BCST")) {
                     // triggers when a message is send to all clients.
                     if (line.contains("BCST")) {
                         //Split up the message and sanitize the message.
@@ -55,7 +54,6 @@ public class MessageHandler implements Runnable {
                     }
 
 
-
                 } else {
                     // the message send by this client had been recieved properly by the server
                     // also split up the message and sanitize the message.
@@ -66,6 +64,7 @@ public class MessageHandler implements Runnable {
 
             } catch (Exception e) {
                 ct.stop();
+                kill();
                 break;
             }
         }
@@ -86,5 +85,9 @@ public class MessageHandler implements Runnable {
         System.out.println("SENDING PONG");
         writer.println("PONG");
         writer.flush();
+    }
+
+    void kill() {
+        Thread.currentThread().start();
     }
 }

@@ -15,6 +15,7 @@ public class Client extends JFrame implements Runnable {
     private String username;
     private String host;
     private int port;
+    private Thread messageHandler;
 
     public Client(String host, int port, String username) {
         this.host = host;
@@ -54,14 +55,35 @@ public class Client extends JFrame implements Runnable {
             writer.println("HELO " + username);
             writer.flush();
 
-            // user is connected to the server, printing username.
-            while (!reader.readLine().contains("+OK HELO")) {
-                text.append("User " + username + " is connected.\n");
-//                Util.printWithColor(Util.Color.BLUE, username);
+            while (true) {
+                System.out.println(reader.readLine());
+                if (reader.readLine().equals("-ERR user already logged in")) {
+                    stop();
+                }
+
+                if (reader.readLine().contains("+OK HELO")) {
+                    break;
+                }
             }
 
+
+//            while(!reader.readLine().equals("-ERR user already logged in")){
+//                System.out.println(reader.readLine());
+//
+//                this.dispose();
+//                this.stop();
+//            }
+//                JOptionPane.showMessageDialog(this, "Username already in use. STOPPING", "ERROR", JOptionPane.ERROR_MESSAGE);
+
+
+//            // user is connected to the server, printing username.
+//            while (!reader.readLine().contains("+OK HELO")) {
+//                text.append("User " + username + " is connected.\n");
+////                Util.printWithColor(Util.Color.BLUE, username);
+//            }
+
             // starting messageHandler in new Thread.
-            Thread messageHandler = new Thread(new MessageHandler(connection, text, this));
+            messageHandler = new Thread(new MessageHandler(connection, text, this));
             messageHandler.start();
 
             send.addActionListener(new ActionListener() {
@@ -90,12 +112,18 @@ public class Client extends JFrame implements Runnable {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            if (messageHandler != null) {
+                messageHandler.stop();
+            }
+            this.dispose();
+            stop();
         }
 
     }
 
     void stop() {
-        this.stop();
+        this.dispose();
+        Thread.currentThread().stop();
+
     }
 }

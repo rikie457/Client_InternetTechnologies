@@ -12,16 +12,16 @@ public class Client extends JFrame implements Runnable {
     private ConnectionHandler connection;
     private BufferedReader reader;
     private PrintWriter writer;
-    private String username;
+    String username, currentgroup;
     private String host;
     private int port;
     private Thread messageHandler;
 
     private JPanel panel;
-    private JTextArea text;
+    private JTextArea text = new JTextArea(20, 20);
     private JScrollPane scroll;
     private JTextField input;
-    private JButton send, clientlist, addgroup;
+    private JButton send, clientlistButton, addgroupButton, joingroupButton, removegroupButton;
     private Util util;
 
     public Client(String host, int port, String username) {
@@ -69,23 +69,16 @@ public class Client extends JFrame implements Runnable {
     }
 
     void createUI(JFrame frame, int level) {
-        if (level == 2) {
-            panel.add(clientlist);
-
-            clientlist.addActionListener(actionEvent -> {
-                util.sendMessage("CLIENTLIST");
-            });
-            return;
-        }
 
 
         panel = new JPanel();
-        text = new JTextArea(20, 20);
         scroll = new JScrollPane(text);
         input = new JTextField(10);
         send = new JButton("Send");
-        clientlist = new JButton("Clientlist");
-        addgroup = new JButton("Create Group");
+        clientlistButton = new JButton("Clientlist");
+        addgroupButton = new JButton("Create Group");
+        joingroupButton = new JButton("Join Group");
+        removegroupButton = new JButton("Delete Current Group");
 
 
         panel.setLayout(new FlowLayout());
@@ -96,7 +89,44 @@ public class Client extends JFrame implements Runnable {
         panel.add(scroll);
         panel.add(input);
         panel.add(send);
-        panel.add(addgroup);
+
+
+        if (level == 2) {
+            panel.add(clientlistButton);
+            panel.add(addgroupButton);
+            panel.add(joingroupButton);
+//            panel.add(DirectMessageButton);
+            panel.add(removegroupButton);
+
+            clientlistButton.addActionListener(actionEvent -> {
+                writer.println("CLIENTLIST");
+                writer.flush();
+            });
+
+//            DirectMessageButton.addActionListener(actionEvent -> {
+//                System.out.println("Opening DirectMessageWindow");
+//                writer.println("CLIENTLIST-DM");
+//                writer.flush();
+//            });
+
+            addgroupButton.addActionListener(actionEvent -> {
+                String groupname = JOptionPane.showInputDialog(this, "Group name:");
+                if (groupname != null) {
+                    util.sendMessage("GROUPCREATE " + username + " " + groupname);
+                }
+            });
+
+            joingroupButton.addActionListener(actionEvent -> {
+                String groupname = JOptionPane.showInputDialog(this, "Group name:");
+                if (groupname != null) {
+                    util.sendMessage("GROUPJOIN " + groupname);
+                }
+            });
+
+            removegroupButton.addActionListener(actionEvent -> {
+                util.sendMessage("GROUPREMOVE " + currentgroup + " " + username);
+            });
+        }
 
 
         send.addActionListener(actionEvent -> {
@@ -116,15 +146,10 @@ public class Client extends JFrame implements Runnable {
             JScrollBar vertical = scroll.getVerticalScrollBar();
             vertical.setValue(vertical.getMaximum());
             input.setText("");
+
         });
 
-        addgroup.addActionListener(actionEvent -> {
-            String groupname = JOptionPane.showInputDialog(this, "Group name:");
-            util.sendMessage("GROUPCREATE " + username + " " + groupname);
-        });
-
-        frame.add(panel);
-
+        frame.setContentPane(panel);
         frame.setTitle(username);
         frame.setSize(300, 600);
         frame.setResizable(false);

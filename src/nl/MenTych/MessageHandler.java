@@ -10,6 +10,7 @@ public class MessageHandler implements Runnable {
     private BufferedReader reader;
     private JTextArea text;
     private Client ct;
+    private Util util;
 
     /**
      * @param connection The message handler handles incomming messages from the server, including the heartbeat.
@@ -19,6 +20,7 @@ public class MessageHandler implements Runnable {
         this.reader = connection.getReader();
         this.ct = ct;
         this.text = text;
+        this.util = new Util(writer);
     }
 
     @Override
@@ -28,7 +30,7 @@ public class MessageHandler implements Runnable {
             String line = this.reader.readLine();
             while (!line.contains("+OK HELO")) {
                 line = this.reader.readLine();
-                if (line.equals("-ERR user already logged in") || line.equals("-ERR username has an invalid format (only characters, numbers and underscores are allowed")) {
+                if (line.equals("-ERR user already logged in")) {
                     JOptionPane.showMessageDialog(ct, "Username already taken", "ERROR", JOptionPane.ERROR_MESSAGE);
                     ct.dispose();
                     ct.stop();
@@ -37,27 +39,39 @@ public class MessageHandler implements Runnable {
             }
 
             System.out.println("Client is ready to send and recieve messages!\n");
-
+            ct.currentgroup = "Main";
             while (true) {
                 line = this.reader.readLine();
                 System.out.println(line);
                 String[] splits = line.split("\\s+");
-                System.out.println(splits.length);
 
-                if (splits.length > 2 && !splits[0].equals("BCST")) {
+                if (splits.length >= 2 && !splits[0].equals("BCST")) {
 
                     System.out.println(splits[0] + " " + splits[1]);
                     switch (splits[0] + " " + splits[1]) {
-                        case "-ERR NOSUCHGROUP":
 
+                        case "-ERR NOSUCHGROUP":
+                            JOptionPane.showMessageDialog(ct, "Group does not exist", "ERROR", JOptionPane.ERROR_MESSAGE);
+                            break;
+                        case "-ERR GROUPEXISTS":
+                            JOptionPane.showMessageDialog(ct, "Group already exists", "ERROR", JOptionPane.ERROR_MESSAGE);
+                            break;
+                        case "-ERR NOTOWNER":
+                            JOptionPane.showMessageDialog(ct, "You are not the owner\n Only owners can remove groups", "ERROR", JOptionPane.ERROR_MESSAGE);
                             break;
                         case "+OK GROUPJOIN":
+                            ct.currentgroup = splits[2];
                             text.append("Joined group " + splits[2] + "\n");
                             break;
                         case "+OK GROUPCREATE":
+                            ct.currentgroup = splits[2];
                             text.append("Joined group " + splits[2] + "\n");
                             break;
-
+                        case "+OK GROUPREMOVED":
+                            ct.currentgroup = "Main";
+                            util.sendMessage("GROUPJOIN  Main");
+                            text.append("The group you joined has been removed \n Moving back to Main \n");
+                            break;
                         case "+OK CLIENTLIST":
                             String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
                             messageRecieved("Clientlist" + ":");

@@ -3,6 +3,8 @@ package nl.MenTych;
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class MessageHandler implements Runnable {
@@ -40,9 +42,16 @@ public class MessageHandler implements Runnable {
 
             System.out.println("Client is ready to send and recieve messages!\n");
             ct.currentgroup = "Main";
+
+            util.sendMessage("VERSION");
+
+            ct.send.setEnabled(true);
+            ct.input.setEnabled(true);
+
             while (true) {
                 line = this.reader.readLine();
                 System.out.println(line);
+
                 String[] splits = line.split("\\s+");
 
                 if (splits.length >= 2 && !splits[0].equals("BCST")) {
@@ -74,10 +83,24 @@ public class MessageHandler implements Runnable {
                             break;
                         case "+OK CLIENTLIST":
                             String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
+                            ct.clientList.clear();
+
                             messageRecieved("Clientlist" + ":");
                             for (String member : members) {
+                                ct.clientList.add(member);
                                 messageRecieved(" - " + member);
                             }
+                            break;
+
+                        case "+OK CLIENTLIST-DM":
+                            String[] users = line.replaceAll("[*+OK CLIENTLIST\\-DM $]", "").split(",");
+                            ct.clientList.clear();
+
+                            for (String member : users) {
+                                ct.clientList.add(member);
+                            }
+
+                            ct.openDirectMessageWindow();
                             break;
                         case "+OK BCST":
                             // the message send by this client had been recieved properly by the server
@@ -89,6 +112,9 @@ public class MessageHandler implements Runnable {
 
                         case "+VERSION 2":
                             this.ct.createUI(this.ct, 2);
+                            ct.send.setEnabled(true);
+                            ct.input.setEnabled(true);
+
                             System.out.println("VERSION 2");
                             break;
 

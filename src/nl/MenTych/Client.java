@@ -6,9 +6,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Client extends JFrame implements Runnable {
 
+    public ArrayList<DirectMessageClient> openDirectMessages = new ArrayList<>();
     private ConnectionHandler connection;
     private BufferedReader reader;
     private PrintWriter writer;
@@ -20,8 +23,12 @@ public class Client extends JFrame implements Runnable {
     private JPanel panel;
     private JTextArea text = new JTextArea(20, 20);
     private JScrollPane scroll;
-    private JTextField input;
-    private JButton send, clientlistButton, addgroupButton, joingroupButton, removegroupButton;
+    private JButton clientlistButton, DirectMessageButton;
+
+    ArrayList<String> clientList = new ArrayList<>();
+
+    JTextField input;
+    JButton send, clientlistButton, addgroupButton, joingroupButton, removegroupButton;
     private Util util;
 
     public Client(String host, int port, String username) {
@@ -36,6 +43,8 @@ public class Client extends JFrame implements Runnable {
         //Setup the frame and the panel inside.
 
         JFrame frame = this;
+        frame.setLocationRelativeTo(null);
+
         createUI(frame, 1);
 
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -70,11 +79,12 @@ public class Client extends JFrame implements Runnable {
 
     void createUI(JFrame frame, int level) {
 
-
         panel = new JPanel();
         scroll = new JScrollPane(text);
         input = new JTextField(10);
         send = new JButton("Send");
+        clientlistButton = new JButton("Clientlist");
+        DirectMessageButton = new JButton("Direct Message");
         clientlistButton = new JButton("Clientlist");
         addgroupButton = new JButton("Create Group");
         joingroupButton = new JButton("Join Group");
@@ -85,6 +95,7 @@ public class Client extends JFrame implements Runnable {
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         text.setEditable(false);
+        input.setEnabled(false);
 
         panel.add(scroll);
         panel.add(input);
@@ -95,7 +106,7 @@ public class Client extends JFrame implements Runnable {
             panel.add(clientlistButton);
             panel.add(addgroupButton);
             panel.add(joingroupButton);
-//            panel.add(DirectMessageButton);
+            panel.add(DirectMessageButton);
             panel.add(removegroupButton);
 
             clientlistButton.addActionListener(actionEvent -> {
@@ -103,11 +114,11 @@ public class Client extends JFrame implements Runnable {
                 writer.flush();
             });
 
-//            DirectMessageButton.addActionListener(actionEvent -> {
-//                System.out.println("Opening DirectMessageWindow");
-//                writer.println("CLIENTLIST-DM");
-//                writer.flush();
-//            });
+            DirectMessageButton.addActionListener(actionEvent -> {
+                System.out.println("Opening DirectMessageWindow");
+                writer.println("CLIENTLIST-DM");
+                writer.flush();
+            });
 
             addgroupButton.addActionListener(actionEvent -> {
                 String groupname = JOptionPane.showInputDialog(this, "Group name:");
@@ -128,7 +139,7 @@ public class Client extends JFrame implements Runnable {
             });
         }
 
-
+        send.setEnabled(false)
         send.addActionListener(actionEvent -> {
             String message = input.getText();
 
@@ -139,7 +150,10 @@ public class Client extends JFrame implements Runnable {
                 // connection to server is lost or user is disconnected.
                 text.append("Disconnected from the server\n");
             }
-            util.sendMessage("BCST " + message);
+
+            if (message.length() > 0) {
+                util.sendMessage("BCST " + message);
+            }
 
 
             //Scroll down and clear the input
@@ -153,13 +167,22 @@ public class Client extends JFrame implements Runnable {
         frame.setTitle(username);
         frame.setSize(300, 600);
         frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setVisible(true);
     }
 
     void stop() {
         Thread.currentThread().stop();
+    }
+
+    void openDirectMessageWindow() {
+        System.out.println(clientList.size());
+        if (clientList.size() > 1) {
+            Thread DM = new Thread(new ClientListWindow(this.username, this.clientList, this.writer, this));
+            DM.start();
+        } else {
+            JOptionPane.showMessageDialog(this, "You are the only user currently connected.", "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
 

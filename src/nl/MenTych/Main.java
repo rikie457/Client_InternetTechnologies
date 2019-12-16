@@ -31,7 +31,7 @@ public class Main {
         button.addActionListener(actionEvent -> {
             String username = usernameinput.getText();
 
-            if (!username.replace(" ", "_").matches("(\\w)\\w+")) {
+            if (!username.replace(" ", "_").matches("(\\w)\\w+") && username.length() < 3) {
                 //Username is not correct so try again also make text red.
                 usernameinput.setForeground(Color.red);
             } else {

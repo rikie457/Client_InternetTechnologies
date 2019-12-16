@@ -40,55 +40,65 @@ public class MessageHandler implements Runnable {
 
             while (true) {
                 line = this.reader.readLine();
+                System.out.println(line);
                 String[] splits = line.split("\\s+");
+                System.out.println(splits.length);
 
+                if (splits.length > 2 && !splits[0].equals("BCST")) {
 
-                if (line.equals("DSCN Pong timeout")) {
-                    ct.stop();
-                    System.out.println("STOPPING CLIENT");
-                    kill();
-                }
+                    System.out.println(splits[0] + " " + splits[1]);
+                    switch (splits[0] + " " + splits[1]) {
+                        case "-ERR NOSUCHGROUP":
 
-                if (line.contains("+VERSION 2")) {
-                    this.ct.createUI(this.ct, 2);
-                    System.out.println("VERSION 2");
-                }
+                            break;
+                        case "+OK GROUPJOIN":
+                            text.append("Joined group " + splits[2] + "\n");
+                            break;
+                        case "+OK GROUPCREATE":
+                            text.append("Joined group " + splits[2] + "\n");
+                            break;
 
-                // triggers when the recieved message hasn't been send by this client
-                if (line.contains("+OK CLIENTLIST")) {
-                    String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
-                    messageRecieved("Clientlist" + ":");
-                    for (String member : members) {
-                        messageRecieved(" - " + member);
+                        case "+OK CLIENTLIST":
+                            String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
+                            messageRecieved("Clientlist" + ":");
+                            for (String member : members) {
+                                messageRecieved(" - " + member);
+                            }
+                            break;
+                        case "+OK BCST":
+                            // the message send by this client had been recieved properly by the server
+                            // also split up the message and sanitize the message.
+                            String[] parts = line.split("\\+OK BCST");
+                            String message = parts[1];
+                            messageSendSuccessfully("You: " + message);
+                            break;
+
+                        case "+VERSION 2":
+                            this.ct.createUI(this.ct, 2);
+                            System.out.println("VERSION 2");
+                            break;
+
+                        case "DSCN Pong":
+                            ct.stop();
+                            System.out.println("STOPPING CLIENT");
+                            kill();
+                            break;
                     }
-
-
-                } else if (!line.contains("+OK BCST")) {
-                    // triggers when a message is send to all clients.
-                    if (line.contains("BCST")) {
+                } else {
+                    if (splits[0].equals("PING")) {
+                        sendHeartbeat();
+                    } else if (splits[0].equals("BCST")) {
+                        // triggers when a message is send to all clients
                         //Split up the message and sanitize the message.
                         String name = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
                         String[] parts = line.split("BCST \\[+\\w+\\] ");
                         String message = parts[1];
                         messageRecieved(name + ": " + message);
                     }
-
-                    // triggers when the server asks for a heartbeat.
-                    // THE CLIENT NEEDS TO RESPOND WITH 'PONG' WITHIN 3 SECONDS.
-                    if (line.equals("PING")) {
-                        sendHeartbeat();
-                    }
-
-
-                } else {
-                    // the message send by this client had been recieved properly by the server
-                    // also split up the message and sanitize the message.
-                    String[] parts = line.split("\\+OK BCST");
-                    String message = parts[1];
-                    messageSendSuccessfully("You: " + message);
                 }
 
             }
+
         } catch (Exception e) {
             ct.stop();
             kill();
@@ -97,7 +107,6 @@ public class MessageHandler implements Runnable {
     }
 
     private void messageSendSuccessfully(String message) {
-        Util.printLnWithColor(Util.Color.MAGENTA, "Message send.");
         text.append(message + "\n");
     }
 
@@ -107,12 +116,11 @@ public class MessageHandler implements Runnable {
 
     private void sendHeartbeat() {
         // responding to the server.
-        System.out.println("SENDING PONG");
         writer.println("PONG");
         writer.flush();
     }
 
     void kill() {
-        Thread.currentThread().start();
+        Thread.currentThread().stop();
     }
 }

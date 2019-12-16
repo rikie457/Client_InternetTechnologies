@@ -21,8 +21,8 @@ public class Client extends JFrame implements Runnable {
     private JTextArea text;
     private JScrollPane scroll;
     private JTextField input;
-    private JButton send;
-    private JButton clientlist;
+    private JButton send, clientlist, addgroup;
+    private Util util;
 
     public Client(String host, int port, String username) {
         this.host = host;
@@ -54,16 +54,15 @@ public class Client extends JFrame implements Runnable {
             reader = connection.getReader();
             writer = connection.getWriter();
 
-            writer.println("HELO " + username);
-            writer.flush();
+            this.util = new Util(writer);
+
+            util.sendMessage("HELO " + username);
 
             // starting messageHandler in new Thread.
             messageHandler = new Thread(new MessageHandler(connection, text, this));
             messageHandler.start();
 
-            writer.println("VERSION");
-            writer.flush();
-
+            util.sendMessage("VERSION");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -74,11 +73,11 @@ public class Client extends JFrame implements Runnable {
             panel.add(clientlist);
 
             clientlist.addActionListener(actionEvent -> {
-                writer.println("CLIENTLIST");
-                writer.flush();
+                util.sendMessage("CLIENTLIST");
             });
             return;
         }
+
 
         panel = new JPanel();
         text = new JTextArea(20, 20);
@@ -86,6 +85,8 @@ public class Client extends JFrame implements Runnable {
         input = new JTextField(10);
         send = new JButton("Send");
         clientlist = new JButton("Clientlist");
+        addgroup = new JButton("Create Group");
+
 
         panel.setLayout(new FlowLayout());
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -95,21 +96,20 @@ public class Client extends JFrame implements Runnable {
         panel.add(scroll);
         panel.add(input);
         panel.add(send);
+        panel.add(addgroup);
 
 
         send.addActionListener(actionEvent -> {
             String message = input.getText();
 
             if (message.equals("Disconnect")) {
-                writer.println("QUIT");
-                writer.flush();
+                util.sendMessage("QUIT");
                 messageHandler.stop();
 
                 // connection to server is lost or user is disconnected.
                 text.append("Disconnected from the server\n");
             }
-            writer.println("BCST " + message);
-            writer.flush();
+            util.sendMessage("BCST " + message);
 
 
             //Scroll down and clear the input
@@ -118,10 +118,15 @@ public class Client extends JFrame implements Runnable {
             input.setText("");
         });
 
+        addgroup.addActionListener(actionEvent -> {
+            String groupname = JOptionPane.showInputDialog(this, "Group name:");
+            util.sendMessage("GROUPCREATE " + username + " " + groupname);
+        });
+
         frame.add(panel);
 
         frame.setTitle(username);
-        frame.setSize(300, 400);
+        frame.setSize(300, 600);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

@@ -1,6 +1,14 @@
 package nl.MenTych;
 
+import java.io.PrintWriter;
+
 public class Util {
+
+    private PrintWriter writer;
+
+    public Util(PrintWriter writer) {
+        this.writer = writer;
+    }
 
     public enum Color {
 
@@ -38,5 +46,10 @@ public class Util {
         System.out.print(colorCode);
         System.out.print(message);
         System.out.print(Color.RESET);
+    }
+
+    public void sendMessage(String message) {
+        writer.println(message);
+        writer.flush();
     }
 }

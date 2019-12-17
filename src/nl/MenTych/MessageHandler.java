@@ -71,16 +71,33 @@ public class MessageHandler implements Runnable {
                         case "+OK GROUPJOIN":
                             ct.currentgroup = splits[2];
                             text.append("Joined group " + splits[2] + "\n");
+                            ct.createUI(this.ct, 2, false);
                             break;
                         case "+OK GROUPCREATE":
                             ct.currentgroup = splits[2];
-                            text.append("Joined group " + splits[2] + "\n");
+                            text.append("Created group " + splits[2] + " (You are now the owner)\n");
+                            this.ct.createUI(this.ct, 2, true);
+                            ct.send.setEnabled(true);
+                            ct.input.setEnabled(true);
                             break;
                         case "+OK GROUPREMOVED":
                             ct.currentgroup = "Main";
                             util.sendMessage("GROUPJOIN  Main");
                             text.append("The group you joined has been removed \n Moving back to Main \n");
                             break;
+
+                        case "+OK GROUPKICK":
+                            ct.currentgroup = "Main";
+                            util.sendMessage("GROUPJOIN  Main");
+                            text.append("You have been kicked from the group by it's owner. \n Moving back to Main \n");
+                            break;
+
+                        case "+OK GROUPLEAVE":
+                            ct.currentgroup = "Main";
+                            util.sendMessage("GROUPJOIN  Main");
+                            text.append("You have leaved the group. \n Moving back to Main \n");
+                            break;
+
                         case "+OK CLIENTLIST":
                             String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
                             ct.clientList.clear();
@@ -93,15 +110,23 @@ public class MessageHandler implements Runnable {
                             break;
 
                         case "+OK CLIENTLIST-DM":
-                            String[] users = line.replaceAll("[*+OK CLIENTLIST\\-DM $]", "").split(",");
+                            String[] users = line.replaceAll("\\WOK \\bCLIENTLIST-DM[\\s]", "").split(",");
                             ct.clientList.clear();
-
                             for (String member : users) {
                                 ct.clientList.add(member);
                             }
-
-                            ct.openDirectMessageWindow();
+                            ct.openDirectMessageWindow(ct.clientList, false);
                             break;
+
+                        case "+OK CLIENTLIST-GROUP":
+                            String[] groupmembers = line.replaceAll("\\WOK \\bCLIENTLIST-GROUP[\\s]", "").split(",");
+                            ct.clientListGroup.clear();
+                            for (String member : groupmembers) {
+                                ct.clientListGroup.add(member);
+                            }
+                            ct.openDirectMessageWindow(ct.clientListGroup, true);
+                            break;
+
                         case "+OK BCST":
                             // the message send by this client had been recieved properly by the server
                             // also split up the message and sanitize the message.
@@ -111,7 +136,7 @@ public class MessageHandler implements Runnable {
                             break;
 
                         case "+VERSION 2":
-                            this.ct.createUI(this.ct, 2);
+                            this.ct.createUI(this.ct, 2, false);
                             ct.send.setEnabled(true);
                             ct.input.setEnabled(true);
 

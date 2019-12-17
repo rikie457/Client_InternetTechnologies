@@ -13,12 +13,25 @@ public class ClientListWindow extends JFrame implements Runnable {
     private final ArrayList<String> clientList;
     private final PrintWriter writer;
     private final Client sender;
+    private boolean groupKick = false;
 
     public ClientListWindow(String username, ArrayList<String> clientList, PrintWriter writer, Client sender) {
         this.username = username;
         this.clientList = clientList;
         this.writer = writer;
         this.sender = sender;
+    }
+
+    public ClientListWindow(String username, ArrayList<String> clientList, PrintWriter writer, Client sender, boolean groupkick) {
+        this.username = username;
+        this.clientList = clientList;
+        this.writer = writer;
+        this.sender = sender;
+        this.setGroupKick();
+    }
+
+    public void setGroupKick() {
+        this.groupKick = true;
     }
 
     @Override
@@ -48,11 +61,19 @@ public class ClientListWindow extends JFrame implements Runnable {
             if(!this.username.equals(member)) {
                 JButton button = new JButton(member);
 
-                button.addActionListener(actionEvent -> {
-                    Thread t = new Thread(new DirectMessageClient(member, sender, member, writer));
-                    t.start();
-                    this.dispose();
-                });
+                if (!this.groupKick) {
+                    button.addActionListener(actionEvent -> {
+                        Thread t = new Thread(new DirectMessageClient(member, sender, member, writer));
+                        t.start();
+                        this.dispose();
+                    });
+                } else {
+                    button.addActionListener(actionEvent -> {
+                        writer.println("KICK " + member);
+                        this.sender.serverMessage("You have kicked " + member);
+                        this.dispose();
+                    });
+                }
 
                 users.add(button);
             }

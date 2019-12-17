@@ -50,6 +50,7 @@ public class MessageHandler implements Runnable {
 
             while (true) {
                 line = this.reader.readLine();
+                System.out.println(line);
 
                 String[] splits = line.split("\\s+");
 

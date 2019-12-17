@@ -119,6 +119,7 @@ public class Client extends JFrame implements Runnable {
 
             DirectMessageButton.addActionListener(actionEvent -> {
                 System.out.println("Opening DirectMessageWindow");
+
                 writer.println("CLIENTLIST-DM");
                 writer.flush();
             });

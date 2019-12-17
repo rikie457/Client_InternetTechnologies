@@ -23,7 +23,7 @@ public class Client extends JFrame implements Runnable {
     private JPanel panel;
     private JTextArea text = new JTextArea(20, 20);
     private JScrollPane scroll;
-    private JButton clientlistButton, DirectMessageButton;
+    private JButton DirectMessageButton;
 
     ArrayList<String> clientList = new ArrayList<>();
 
@@ -139,7 +139,7 @@ public class Client extends JFrame implements Runnable {
             });
         }
 
-        send.setEnabled(false)
+        send.setEnabled(false);
         send.addActionListener(actionEvent -> {
             String message = input.getText();
 

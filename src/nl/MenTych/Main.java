@@ -11,6 +11,7 @@ public class Main {
         JFrame frame = new JFrame("Controller window");
         JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout());
+
         JLabel namelabel = new JLabel("Username: ");
         JTextField usernameinput = new JTextField(10);
         JLabel label = new JLabel("Create a new client by clicking the button");

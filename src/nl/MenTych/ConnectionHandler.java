@@ -22,7 +22,7 @@ public class ConnectionHandler {
             this.input = socket.getInputStream();
             this.output = socket.getOutputStream();
             this.reader = new BufferedReader(new InputStreamReader(this.input));
-            this.writer = new PrintWriter(this.output);
+            this.writer = new PrintWriter(this.output, true);
 
 
 

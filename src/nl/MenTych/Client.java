@@ -54,6 +54,9 @@ public class Client extends JFrame implements Runnable {
                 writer.println("QUIT");
                 writer.flush();
                 messageHandler.stop();
+                for (DirectMessageClient c : openDirectMessages) {
+                    c.dispose();
+                }
                 frame.dispose();
             }
         });
@@ -183,6 +186,26 @@ public class Client extends JFrame implements Runnable {
         } else {
             JOptionPane.showMessageDialog(this, "You are the only user currently connected.", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    boolean isDirectMessageWindowOpen(String username) {
+        if (openDirectMessages.size() > 0) {
+            for (DirectMessageClient dm : openDirectMessages) {
+                if (dm.getReciever().equals(username)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    DirectMessageClient getDirectMessageClient(String username) {
+        for (DirectMessageClient dm : openDirectMessages) {
+            if (dm.getReciever().equals(username)) {
+                return dm;
+            }
+        }
+        return null;
     }
 }
 

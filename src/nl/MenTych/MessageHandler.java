@@ -50,11 +50,10 @@ public class MessageHandler implements Runnable {
 
             while (true) {
                 line = this.reader.readLine();
-                System.out.println(line);
 
                 String[] splits = line.split("\\s+");
 
-                if (splits.length >= 2 && !splits[0].equals("BCST")) {
+                if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
 
                     System.out.println(splits[0] + " " + splits[1]);
                     switch (splits[0] + " " + splits[1]) {
@@ -125,15 +124,23 @@ public class MessageHandler implements Runnable {
                             break;
                     }
                 } else {
-                    if (splits[0].equals("PING")) {
-                        sendHeartbeat();
-                    } else if (splits[0].equals("BCST")) {
-                        // triggers when a message is send to all clients
-                        //Split up the message and sanitize the message.
-                        String name = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
-                        String[] parts = line.split("BCST \\[+\\w+\\] ");
-                        String message = parts[1];
-                        messageRecieved(name + ": " + message);
+                    switch (splits[0]) {
+                        case "PING":
+                            sendHeartbeat();
+                            break;
+
+                        case "BCST":
+                            // triggers when a message is send to all clients
+                            //Split up the message and sanitize the message.
+                            String name = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
+                            String[] parts = line.split("BCST \\[+\\w+\\] ");
+                            String message = parts[1];
+                            messageRecieved(name + ": " + message);
+                            break;
+
+                        case "+DM":
+                            pushContentToTextView(splits, false);
+                            break;
                     }
                 }
 
@@ -144,6 +151,27 @@ public class MessageHandler implements Runnable {
             kill();
         }
 
+    }
+
+    private void pushContentToTextView(String[] splits, boolean threadStarted) {
+        if (this.ct.isDirectMessageWindowOpen(splits[1])) {
+            StringBuilder txt = new StringBuilder();
+            txt.append(splits[1]);
+            txt.append(": ");
+
+            for (int i = 2; i < splits.length; i++) {
+                txt.append(splits[i]);
+                txt.append(" ");
+            }
+            this.ct.getDirectMessageClient(splits[1]).appendToTextView(txt.toString());
+
+        } else if (!threadStarted) {
+            Thread t = new Thread(new DirectMessageClient(splits[1], this.ct, splits[1], writer));
+            t.start();
+            pushContentToTextView(splits, true);
+        } else {
+            pushContentToTextView(splits, true);
+        }
     }
 
     private void messageSendSuccessfully(String message) {

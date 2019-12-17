@@ -36,6 +36,7 @@ public class Main {
                 //Username is not correct so try again also make text red.
                 usernameinput.setForeground(Color.red);
             } else {
+                username = username.replace(" ", "_");
                 //User name is correct. Create new thread and reset the input/panel.
                 usernameinput.setForeground(Color.black);
                 Thread client = new Thread(new Client("127.0.0.1", 1337, username));

@@ -22,7 +22,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
     private Util util;
 
     public DirectMessageClient(String title, Client ct, String reciever, PrintWriter writer) {
-        this.setTitle(title);
+        this.setTitle("Direct Message to:" + title);
         this.sender = ct;
         this.sender.openDirectMessages.add(this);
         this.reciever = reciever;
@@ -40,7 +40,6 @@ public class DirectMessageClient extends JFrame implements Runnable {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                messageHandler.stop();
                 client.sender.openDirectMessages.remove(client);
                 frame.dispose();
             }
@@ -54,11 +53,49 @@ public class DirectMessageClient extends JFrame implements Runnable {
         JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout());
 
+        scroll = new JScrollPane(text);
+        input = new JTextField(10);
+        send = new JButton("Send");
+
+        text.setEditable(false);
+
+        panel.setLayout(new FlowLayout());
+        scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+
+        panel.add(scroll);
+        panel.add(input);
+        panel.add(send);
+
+        send.addActionListener(actionEvent -> {
+            String message = input.getText();
+
+            if (message.length() > 0) {
+                util.sendMessage("DM " + reciever + " " + this.sender.username + " " + message);
+                appendToTextView("You: " + message);
+            }
+
+
+            //Scroll down and clear the input
+            JScrollBar vertical = scroll.getVerticalScrollBar();
+            vertical.setValue(vertical.getMaximum());
+            input.setText("");
+
+        });
+
         frame.setContentPane(panel);
 
-        frame.setTitle(this.reciever);
         frame.setSize(300, 450);
         frame.setResizable(false);
         frame.setVisible(true);
+    }
+
+    public String getReciever() {
+        return reciever;
+    }
+
+    public void appendToTextView(String text) {
+        this.text.append(text);
+        this.text.append("\n");
     }
 }

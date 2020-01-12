@@ -4,8 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 
 public class Client extends JFrame implements Runnable {
@@ -28,7 +27,7 @@ public class Client extends JFrame implements Runnable {
     ArrayList<String> clientListGroup = new ArrayList<>();
 
     JTextField input;
-    JButton send, clientlistButton, kickFromGroupButton, leavegroupButton, addgroupButton, joingroupButton, removegroupButton;
+    JButton send, clientlistButton, kickFromGroupButton, leavegroupButton, addgroupButton, joingroupButton, removegroupButton, sendFile;
     private Util util;
 
     public Client(String host, int port, String username) {
@@ -73,8 +72,6 @@ public class Client extends JFrame implements Runnable {
             // starting messageHandler in new Thread.
             messageHandler = new Thread(new MessageHandler(connection, text, this));
             messageHandler.start();
-
-            util.sendMessage("VERSION");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -94,6 +91,7 @@ public class Client extends JFrame implements Runnable {
         removegroupButton = new JButton("Delete Current Group");
         leavegroupButton = new JButton("Leave Current Group");
         kickFromGroupButton = new JButton("Kick user from Current Group");
+        sendFile = new JButton("Send a File");
 
 
         panel.setLayout(new FlowLayout());
@@ -109,6 +107,7 @@ public class Client extends JFrame implements Runnable {
         if (level == 2) {
             panel.add(clientlistButton);
             panel.add(DirectMessageButton);
+            panel.add(sendFile);
 
             clientlistButton.addActionListener(actionEvent -> {
                 writer.println("CLIENTLIST");
@@ -157,6 +156,42 @@ public class Client extends JFrame implements Runnable {
             panel.add(kickFromGroupButton);
             panel.add(removegroupButton);
         }
+
+        sendFile.addActionListener(actionEvent -> {
+            util.sendMessage("NEWFILE");
+            try {
+                JFileChooser chooser = new JFileChooser();
+                int returnVal = chooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    System.out.println("You chose to open this file: " +
+                            chooser.getSelectedFile().getName());
+                }
+
+                File myFile = chooser.getSelectedFile();
+                byte[] mybytearray = new byte[(int) myFile.length()];
+
+                System.out.println(mybytearray.length);
+
+                FileInputStream fis = null;
+
+                fis = new FileInputStream(myFile);
+
+                BufferedInputStream bis = new BufferedInputStream(fis);
+                //bis.read(mybytearray, 0, mybytearray.length);
+
+                DataInputStream dis = new DataInputStream(bis);
+                dis.readFully(mybytearray, 0, mybytearray.length);
+
+                //Sending file name and file size to the server
+                DataOutputStream dos = new DataOutputStream(connection.getOutput());
+                dos.writeUTF(myFile.getName());
+                dos.writeLong(mybytearray.length);
+                dos.write(mybytearray, 0, mybytearray.length);
+                dos.flush();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
         send.setEnabled(false);
         send.addActionListener(actionEvent -> {

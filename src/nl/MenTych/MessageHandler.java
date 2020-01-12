@@ -2,14 +2,14 @@ package nl.MenTych;
 
 import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class MessageHandler implements Runnable {
     private PrintWriter writer;
     private BufferedReader reader;
+    private OutputStream outputStream;
     private JTextArea text;
     private Client ct;
     private Util util;
@@ -20,6 +20,7 @@ public class MessageHandler implements Runnable {
     public MessageHandler(ConnectionHandler connection, JTextArea text, Client ct) {
         this.writer = connection.getWriter();
         this.reader = connection.getReader();
+        this.outputStream = connection.getOutput();
         this.ct = ct;
         this.text = text;
         this.util = new Util(writer);
@@ -176,7 +177,6 @@ public class MessageHandler implements Runnable {
             ct.stop();
             kill();
         }
-
     }
 
     private void pushContentToTextView(String[] splits, boolean threadStarted) {

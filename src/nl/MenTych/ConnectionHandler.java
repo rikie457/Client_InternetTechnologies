@@ -1,6 +1,9 @@
 package nl.MenTych;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 public class ConnectionHandler {
@@ -10,8 +13,8 @@ public class ConnectionHandler {
     private Socket socket;
     private InputStream input;
     private OutputStream output;
-    private BufferedReader reader;
-    private PrintWriter writer;
+    private DataInputStream reader;
+    private DataOutputStream writer;
 
     public ConnectionHandler(String host, int port) {
         this.host = host;
@@ -21,9 +24,8 @@ public class ConnectionHandler {
             this.socket = new Socket(host, port);
             this.input = socket.getInputStream();
             this.output = socket.getOutputStream();
-            this.reader = new BufferedReader(new InputStreamReader(this.input));
-            this.writer = new PrintWriter(this.output, true);
-
+            this.reader = new DataInputStream(this.input);
+            this.writer = new DataOutputStream(this.output);
 
 
         } catch (Exception e) {
@@ -43,11 +45,11 @@ public class ConnectionHandler {
         return output;
     }
 
-    public PrintWriter getWriter() {
+    public DataOutputStream getWriter() {
         return writer;
     }
 
-    public BufferedReader getReader() {
+    public DataInputStream getReader() {
         return reader;
     }
 

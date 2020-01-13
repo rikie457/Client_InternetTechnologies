@@ -1,18 +1,19 @@
 package nl.MenTych;
 
 import javax.swing.*;
-import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 
 
 public class MessageHandler implements Runnable {
-    private PrintWriter writer;
-    private BufferedReader reader;
+    private DataOutputStream writer;
+    private DataInputStream reader;
     private OutputStream outputStream;
     private JTextArea text;
     private Client ct;
     private Util util;
+    private boolean sendingFile = false;
 
     /**
      * @param connection The message handler handles incomming messages from the server, including the heartbeat.
@@ -30,9 +31,9 @@ public class MessageHandler implements Runnable {
     public void run() {
 
         try {
-            String line = this.reader.readLine();
+            String line = this.reader.readUTF();
             while (!line.contains("+OK HELO")) {
-                line = this.reader.readLine();
+                line = this.reader.readUTF();
                 if (line.equals("-ERR user already logged in")) {
                     JOptionPane.showMessageDialog(ct, "Username already taken", "ERROR", JOptionPane.ERROR_MESSAGE);
                     ct.dispose();
@@ -50,128 +51,130 @@ public class MessageHandler implements Runnable {
             ct.input.setEnabled(true);
 
             while (true) {
-                line = this.reader.readLine();
-                System.out.println(line);
+                if (!sendingFile) {
+                    line = this.reader.readUTF();
+                    System.out.println(line);
 
-                String[] splits = line.split("\\s+");
+                    String[] splits = line.split("\\s+");
 
-                if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
-                    System.out.println(splits[0] + " " + splits[1]);
-                    switch (splits[0] + " " + splits[1]) {
+                    if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
+                        System.out.println(splits[0] + " " + splits[1]);
+                        switch (splits[0] + " " + splits[1]) {
 
-                        case "-ERR NOSUCHGROUP":
-                            JOptionPane.showMessageDialog(ct, "Group does not exist", "ERROR", JOptionPane.ERROR_MESSAGE);
-                            break;
-                        case "-ERR GROUPEXISTS":
-                            JOptionPane.showMessageDialog(ct, "Group already exists", "ERROR", JOptionPane.ERROR_MESSAGE);
-                            break;
-                        case "-ERR NOTOWNER":
-                            JOptionPane.showMessageDialog(ct, "You are not the owner\n Only owners can remove groups", "ERROR", JOptionPane.ERROR_MESSAGE);
-                            break;
-                        case "+OK GROUPJOIN":
-                            ct.currentgroup = splits[2];
-                            text.append("Joined group " + splits[2] + "\n");
-                            ct.createUI(this.ct, 2, false);
-                            break;
-                        case "+OK GROUPCREATE":
-                            ct.currentgroup = splits[2];
-                            text.append("Created group " + splits[2] + " (You are now the owner)\n");
-                            this.ct.createUI(this.ct, 2, true);
-                            ct.send.setEnabled(true);
-                            ct.input.setEnabled(true);
-                            break;
-                        case "+OK GROUPREMOVED":
-                            ct.currentgroup = "Main";
-                            util.sendMessage("GROUPJOIN  Main");
-                            text.append("The group you joined has been removed \n Moving back to Main \n");
-                            break;
+                            case "-ERR NOSUCHGROUP":
+                                JOptionPane.showMessageDialog(ct, "Group does not exist", "ERROR", JOptionPane.ERROR_MESSAGE);
+                                break;
+                            case "-ERR GROUPEXISTS":
+                                JOptionPane.showMessageDialog(ct, "Group already exists", "ERROR", JOptionPane.ERROR_MESSAGE);
+                                break;
+                            case "-ERR NOTOWNER":
+                                JOptionPane.showMessageDialog(ct, "You are not the owner\n Only owners can remove groups", "ERROR", JOptionPane.ERROR_MESSAGE);
+                                break;
+                            case "+OK GROUPJOIN":
+                                ct.currentgroup = splits[2];
+                                text.append("Joined group " + splits[2] + "\n");
+                                ct.createUI(this.ct, 2, false);
+                                break;
+                            case "+OK GROUPCREATE":
+                                ct.currentgroup = splits[2];
+                                text.append("Created group " + splits[2] + " (You are now the owner)\n");
+                                this.ct.createUI(this.ct, 2, true);
+                                ct.send.setEnabled(true);
+                                ct.input.setEnabled(true);
+                                break;
+                            case "+OK GROUPREMOVED":
+                                ct.currentgroup = "Main";
+                                util.sendMessage("GROUPJOIN  Main");
+                                text.append("The group you joined has been removed \n Moving back to Main \n");
+                                break;
 
-                        case "+OK GROUPKICK":
-                            ct.currentgroup = "Main";
-                            util.sendMessage("GROUPJOIN  Main");
-                            text.append("You have been kicked from the group by it's owner. \n Moving back to Main \n");
-                            break;
+                            case "+OK GROUPKICK":
+                                ct.currentgroup = "Main";
+                                util.sendMessage("GROUPJOIN  Main");
+                                text.append("You have been kicked from the group by it's owner. \n Moving back to Main \n");
+                                break;
 
-                        case "+OK GROUPLEAVE":
-                            ct.currentgroup = "Main";
-                            util.sendMessage("GROUPJOIN  Main");
-                            text.append("You have leaved the group. \n Moving back to Main \n");
-                            break;
+                            case "+OK GROUPLEAVE":
+                                ct.currentgroup = "Main";
+                                util.sendMessage("GROUPJOIN  Main");
+                                text.append("You have leaved the group. \n Moving back to Main \n");
+                                break;
 
-                        case "+OK CLIENTLIST":
-                            String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
-                            ct.clientList.clear();
+                            case "+OK CLIENTLIST":
+                                String[] members = line.replaceAll("[*+OK CLIENTLIST $]", "").split(",");
+                                ct.clientList.clear();
 
-                            messageRecieved("Clientlist" + ":");
-                            for (String member : members) {
-                                ct.clientList.add(member);
-                                messageRecieved(" - " + member);
-                            }
-                            break;
+                                messageRecieved("Clientlist" + ":");
+                                for (String member : members) {
+                                    ct.clientList.add(member);
+                                    messageRecieved(" - " + member);
+                                }
+                                break;
 
-                        case "+OK CLIENTLIST-DM":
-                            String[] users = line.replaceAll("\\WOK \\bCLIENTLIST-DM[\\s]", "").split(",");
-                            ct.clientList.clear();
-                            for (String member : users) {
-                                ct.clientList.add(member);
-                            }
-                            ct.openDirectMessageWindow(ct.clientList, false);
-                            break;
+                            case "+OK CLIENTLIST-DM":
+                                String[] users = line.replaceAll("\\WOK \\bCLIENTLIST-DM[\\s]", "").split(",");
+                                ct.clientList.clear();
+                                for (String member : users) {
+                                    ct.clientList.add(member);
+                                }
+                                ct.openDirectMessageWindow(ct.clientList, false);
+                                break;
 
-                        case "+OK CLIENTLIST-GROUP":
-                            String[] groupmembers = line.replaceAll("\\WOK \\bCLIENTLIST-GROUP[\\s]", "").split(",");
-                            ct.clientListGroup.clear();
-                            for (String member : groupmembers) {
-                                ct.clientListGroup.add(member);
-                            }
-                            ct.openDirectMessageWindow(ct.clientListGroup, true);
-                            break;
+                            case "+OK CLIENTLIST-GROUP":
+                                String[] groupmembers = line.replaceAll("\\WOK \\bCLIENTLIST-GROUP[\\s]", "").split(",");
+                                ct.clientListGroup.clear();
+                                for (String member : groupmembers) {
+                                    ct.clientListGroup.add(member);
+                                }
+                                ct.openDirectMessageWindow(ct.clientListGroup, true);
+                                break;
 
-                        case "+OK BCST":
-                            // the message send by this client had been recieved properly by the server
-                            // also split up the message and sanitize the message.
-                            String[] parts = line.split("\\+OK BCST");
-                            String message = parts[1];
-                            messageSendSuccessfully("You: " + message);
-                            break;
+                            case "+OK BCST":
+                                // the message send by this client had been recieved properly by the server
+                                // also split up the message and sanitize the message.
+                                String[] parts = line.split("\\+OK BCST");
+                                String message = parts[1];
+                                messageSendSuccessfully("You: " + message);
+                                break;
 
-                        case "+VERSION 2":
-                            this.ct.createUI(this.ct, 2, false);
-                            ct.send.setEnabled(true);
-                            ct.input.setEnabled(true);
+                            case "+VERSION 2":
+                                this.ct.createUI(this.ct, 2, false);
+                                ct.send.setEnabled(true);
+                                ct.input.setEnabled(true);
 
-                            System.out.println("VERSION 2");
-                            break;
+                                System.out.println("VERSION 2");
+                                break;
 
-                        case "DSCN Pong":
-                            ct.stop();
-                            System.out.println("STOPPING CLIENT");
-                            kill();
-                            break;
+                            case "DSCN Pong":
+                                ct.stop();
+                                System.out.println("STOPPING CLIENT");
+                                kill();
+                                break;
+                        }
+                    } else {
+                        switch (splits[0]) {
+                            case "PING":
+                                sendHeartbeat();
+                                break;
+
+                            case "BCST":
+                                // triggers when a message is send to all clients
+                                //Split up the message and sanitize the message.
+                                String name = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
+                                String[] parts = line.split("BCST \\[+\\w+\\] ");
+                                String message = parts[1];
+                                messageRecieved(name + ": " + message);
+                                break;
+
+                            case "+DM":
+                                pushContentToTextView(splits, false);
+                                break;
+                        }
                     }
-                } else {
-                    switch (splits[0]) {
-                        case "PING":
-                            sendHeartbeat();
-                            break;
 
-                        case "BCST":
-                            // triggers when a message is send to all clients
-                            //Split up the message and sanitize the message.
-                            String name = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
-                            String[] parts = line.split("BCST \\[+\\w+\\] ");
-                            String message = parts[1];
-                            messageRecieved(name + ": " + message);
-                            break;
-
-                        case "+DM":
-                            pushContentToTextView(splits, false);
-                            break;
-                    }
                 }
 
             }
-
         } catch (Exception e) {
             ct.stop();
             kill();
@@ -209,11 +212,18 @@ public class MessageHandler implements Runnable {
 
     private void sendHeartbeat() {
         // responding to the server.
-        writer.println("PONG");
-        writer.flush();
+        util.sendMessage("PONG");
     }
 
     void kill() {
         Thread.currentThread().stop();
+    }
+
+    public boolean isSendingFile() {
+        return sendingFile;
+    }
+
+    public void setSendingFile(boolean sendingFile) {
+        this.sendingFile = sendingFile;
     }
 }

@@ -1,12 +1,12 @@
 package nl.MenTych;
 
-import java.io.PrintWriter;
+import java.io.DataOutputStream;
 
 public class Util {
 
-    private PrintWriter writer;
+    private DataOutputStream writer;
 
-    public Util(PrintWriter writer) {
+    public Util(DataOutputStream writer) {
         this.writer = writer;
     }
 
@@ -49,8 +49,12 @@ public class Util {
     }
 
     public void sendMessage(String message) {
-        System.out.println("SENDNG: " + message);
-        writer.println(message);
-        writer.flush();
+        try {
+            System.out.println("SENDNG: " + message);
+            writer.writeUTF(message);
+            writer.flush();
+        } catch (Exception e) {
+            e.getStackTrace();
+        }
     }
 }

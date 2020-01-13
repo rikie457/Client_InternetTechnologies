@@ -11,12 +11,13 @@ public class Client extends JFrame implements Runnable {
 
     public ArrayList<DirectMessageClient> openDirectMessages = new ArrayList<>();
     private ConnectionHandler connection;
-    private BufferedReader reader;
-    private PrintWriter writer;
+    private DataInputStream reader;
+    private DataOutputStream writer;
     String username, currentgroup = "";
     private String host;
     private int port;
     private Thread messageHandler;
+    private MessageHandler message;
 
     private JPanel panel;
     private JTextArea text = new JTextArea(20, 20);
@@ -50,8 +51,7 @@ public class Client extends JFrame implements Runnable {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                writer.println("QUIT");
-                writer.flush();
+                util.sendMessage("QUIT");
                 messageHandler.stop();
                 for (DirectMessageClient c : openDirectMessages) {
                     c.dispose();
@@ -70,7 +70,8 @@ public class Client extends JFrame implements Runnable {
             util.sendMessage("HELO " + username);
 
             // starting messageHandler in new Thread.
-            messageHandler = new Thread(new MessageHandler(connection, text, this));
+            message = new MessageHandler(connection, text, this);
+            messageHandler = new Thread(message);
             messageHandler.start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -110,15 +111,12 @@ public class Client extends JFrame implements Runnable {
             panel.add(sendFile);
 
             clientlistButton.addActionListener(actionEvent -> {
-                writer.println("CLIENTLIST");
-                writer.flush();
+
             });
 
             DirectMessageButton.addActionListener(actionEvent -> {
                 System.out.println("Opening DirectMessageWindow");
-
-                writer.println("CLIENTLIST-DM");
-                writer.flush();
+                util.sendMessage("CLIENTLIST-DM");
             });
         }
 
@@ -164,17 +162,11 @@ public class Client extends JFrame implements Runnable {
                 JFileChooser chooser = new JFileChooser();
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    System.out.println("You chose to open this file: " +
-                            chooser.getSelectedFile().getName());
-                }
-                DataOutputStream dos = new DataOutputStream(connection.getOutput());
-                File myFile = chooser.getSelectedFile();
-                FileInputStream fis = new FileInputStream(myFile);
-                byte[] buffer = new byte[4096];
+                    System.out.println("You chose to open this file: " + chooser.getSelectedFile().getName());
 
-                while (fis.read(buffer) > 0) {
-                    dos.write(buffer);
+                    sendFile(chooser.getSelectedFile().getPath());
                 }
+
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -222,9 +214,9 @@ public class Client extends JFrame implements Runnable {
         if (userlist.size() > 1) {
             Thread DM;
             if (groupKick) {
-                DM = new Thread(new ClientListWindow(this.username, userlist, this.writer, this, true));
+                DM = new Thread(new ClientListWindow(this.username, userlist, this.writer, this, true, util));
             } else {
-                DM = new Thread(new ClientListWindow(this.username, userlist, this.writer, this));
+                DM = new Thread(new ClientListWindow(this.username, userlist, this.writer, this, util));
             }
             DM.start();
         } else {
@@ -254,6 +246,36 @@ public class Client extends JFrame implements Runnable {
 
     void serverMessage(String message) {
         this.text.append(message + '\n');
+    }
+
+    public void sendFile(String inputFilePath) {
+        message.setSendingFile(true);
+        try {
+            File myFile = new File(inputFilePath);
+            byte[] mybytearray = new byte[(int) myFile.length()];
+
+            FileInputStream fis = new FileInputStream(myFile);
+
+            DataInputStream dis = new DataInputStream(fis);
+            dis.readFully(mybytearray, 0, mybytearray.length);
+
+            OutputStream os = connection.getOutput();
+
+            //Sending file name and file size to the server
+            DataOutputStream dos = new DataOutputStream(os);
+            dos.writeUTF(myFile.getName());
+            System.out.println(myFile.getName());
+            dos.writeLong(mybytearray.length);
+            System.out.println(mybytearray.length);
+            dos.write(mybytearray, 0, mybytearray.length);
+            dos.flush();
+
+            message.setSendingFile(false);
+
+
+        } catch (Exception e) {
+            e.getStackTrace();
+        }
     }
 }
 

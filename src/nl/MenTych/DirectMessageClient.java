@@ -4,12 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.io.DataOutputStream;
 
 public class DirectMessageClient extends JFrame implements Runnable {
 
-    private PrintWriter writer;
+    private DataOutputStream writer;
     private Client sender;
     private String reciever;
     private Thread messageHandler;
@@ -21,7 +20,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
     JButton send;
     private Util util;
 
-    public DirectMessageClient(String title, Client ct, String reciever, PrintWriter writer) {
+    public DirectMessageClient(String title, Client ct, String reciever, DataOutputStream writer) {
         this.setTitle("Direct Message to:" + title);
         this.sender = ct;
         this.sender.openDirectMessages.add(this);

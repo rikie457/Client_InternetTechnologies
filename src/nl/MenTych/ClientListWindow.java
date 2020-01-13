@@ -4,30 +4,33 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.PrintWriter;
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 
 public class ClientListWindow extends JFrame implements Runnable {
 
     private final String username;
     private final ArrayList<String> clientList;
-    private final PrintWriter writer;
+    private final DataOutputStream writer;
     private final Client sender;
+    private Util util;
     private boolean groupKick = false;
 
-    public ClientListWindow(String username, ArrayList<String> clientList, PrintWriter writer, Client sender) {
+    public ClientListWindow(String username, ArrayList<String> clientList, DataOutputStream writer, Client sender, Util util) {
         this.username = username;
         this.clientList = clientList;
         this.writer = writer;
         this.sender = sender;
+        this.util = util;
     }
 
-    public ClientListWindow(String username, ArrayList<String> clientList, PrintWriter writer, Client sender, boolean groupkick) {
+    public ClientListWindow(String username, ArrayList<String> clientList, DataOutputStream writer, Client sender, boolean groupkick, Util util) {
         this.username = username;
         this.clientList = clientList;
         this.writer = writer;
         this.sender = sender;
         this.setGroupKick();
+        this.util = util;
     }
 
     public void setGroupKick() {
@@ -69,7 +72,8 @@ public class ClientListWindow extends JFrame implements Runnable {
                     });
                 } else {
                     button.addActionListener(actionEvent -> {
-                        writer.println("KICK " + member);
+
+                        util.sendMessage("KICK " + member);
                         this.sender.serverMessage("You have kicked " + member);
                         this.dispose();
                     });

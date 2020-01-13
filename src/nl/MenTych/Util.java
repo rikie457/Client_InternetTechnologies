@@ -49,6 +49,7 @@ public class Util {
     }
 
     public void sendMessage(String message) {
+        System.out.println("SENDNG: " + message);
         writer.println(message);
         writer.flush();
     }

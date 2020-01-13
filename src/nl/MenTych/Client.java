@@ -159,6 +159,7 @@ public class Client extends JFrame implements Runnable {
 
         sendFile.addActionListener(actionEvent -> {
             util.sendMessage("NEWFILE");
+
             try {
                 JFileChooser chooser = new JFileChooser();
                 int returnVal = chooser.showOpenDialog(null);
@@ -166,28 +167,15 @@ public class Client extends JFrame implements Runnable {
                     System.out.println("You chose to open this file: " +
                             chooser.getSelectedFile().getName());
                 }
-
-                File myFile = chooser.getSelectedFile();
-                byte[] mybytearray = new byte[(int) myFile.length()];
-
-                System.out.println(mybytearray.length);
-
-                FileInputStream fis = null;
-
-                fis = new FileInputStream(myFile);
-
-                BufferedInputStream bis = new BufferedInputStream(fis);
-                //bis.read(mybytearray, 0, mybytearray.length);
-
-                DataInputStream dis = new DataInputStream(bis);
-                dis.readFully(mybytearray, 0, mybytearray.length);
-
-                //Sending file name and file size to the server
                 DataOutputStream dos = new DataOutputStream(connection.getOutput());
-                dos.writeUTF(myFile.getName());
-                dos.writeLong(mybytearray.length);
-                dos.write(mybytearray, 0, mybytearray.length);
-                dos.flush();
+                File myFile = chooser.getSelectedFile();
+                FileInputStream fis = new FileInputStream(myFile);
+                byte[] buffer = new byte[4096];
+
+                while (fis.read(buffer) > 0) {
+                    dos.write(buffer);
+                }
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

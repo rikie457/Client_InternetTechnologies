@@ -56,7 +56,6 @@ public class MessageHandler implements Runnable {
                 String[] splits = line.split("\\s+");
 
                 if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
-
                     System.out.println(splits[0] + " " + splits[1]);
                     switch (splits[0] + " " + splits[1]) {
 

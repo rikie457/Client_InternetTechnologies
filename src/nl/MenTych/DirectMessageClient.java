@@ -8,16 +8,11 @@ import java.io.DataOutputStream;
 
 public class DirectMessageClient extends JFrame implements Runnable {
 
-    private DataOutputStream writer;
     private Client sender;
     private String reciever;
-    private Thread messageHandler;
-
     private JTextArea text = new JTextArea(20, 20);
     private JScrollPane scroll;
-
-    JTextField input;
-    JButton send;
+    private JTextField input;
     private Util util;
 
     public DirectMessageClient(String title, Client ct, String reciever, DataOutputStream writer) {
@@ -25,7 +20,6 @@ public class DirectMessageClient extends JFrame implements Runnable {
         this.sender = ct;
         this.sender.openDirectMessages.add(this);
         this.reciever = reciever;
-        this.writer = writer;
         this.util = new Util(writer);
     }
 
@@ -54,7 +48,8 @@ public class DirectMessageClient extends JFrame implements Runnable {
 
         scroll = new JScrollPane(text);
         input = new JTextField(10);
-        send = new JButton("Send");
+        JButton send = new JButton("Send");
+        JButton sendFile = new JButton("Send a File");
 
         text.setEditable(false);
 
@@ -65,6 +60,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
         panel.add(scroll);
         panel.add(input);
         panel.add(send);
+        panel.add(sendFile);
 
         send.addActionListener(actionEvent -> {
             String message = input.getText();
@@ -74,12 +70,16 @@ public class DirectMessageClient extends JFrame implements Runnable {
                 appendToTextView("You: " + message);
             }
 
-
             //Scroll down and clear the input
             JScrollBar vertical = scroll.getVerticalScrollBar();
             vertical.setValue(vertical.getMaximum());
             input.setText("");
+        });
 
+        sendFile.addActionListener(actionEvent -> {
+            util.sendMessage("UPLOADFILE " + reciever);
+            Thread fileHandler = new Thread(new FileSendHandler(sender.getHost(), sender.getPort() + 1, sender.getConnection()));
+            fileHandler.start();
         });
 
         frame.setContentPane(panel);

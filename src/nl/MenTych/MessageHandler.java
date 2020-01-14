@@ -3,17 +3,14 @@ package nl.MenTych;
 import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.OutputStream;
 
 
 public class MessageHandler implements Runnable {
     private DataOutputStream writer;
     private DataInputStream reader;
-    private OutputStream outputStream;
     private JTextArea text;
     private Client ct;
     private Util util;
-    private boolean sendingFile = false;
 
     /**
      * @param connection The message handler handles incomming messages from the server, including the heartbeat.
@@ -21,7 +18,6 @@ public class MessageHandler implements Runnable {
     public MessageHandler(ConnectionHandler connection, JTextArea text, Client ct) {
         this.writer = connection.getWriter();
         this.reader = connection.getReader();
-        this.outputStream = connection.getOutput();
         this.ct = ct;
         this.text = text;
         this.util = new Util(writer);
@@ -29,7 +25,6 @@ public class MessageHandler implements Runnable {
 
     @Override
     public void run() {
-
         try {
             String line = this.reader.readUTF();
             while (!line.contains("+OK HELO")) {
@@ -51,7 +46,7 @@ public class MessageHandler implements Runnable {
             ct.input.setEnabled(true);
 
             while (true) {
-                if (!sendingFile) {
+
                     line = this.reader.readUTF();
                     System.out.println(line);
 
@@ -172,9 +167,8 @@ public class MessageHandler implements Runnable {
                         }
                     }
 
-                }
-
             }
+
         } catch (Exception e) {
             ct.stop();
             kill();
@@ -217,13 +211,5 @@ public class MessageHandler implements Runnable {
 
     void kill() {
         Thread.currentThread().stop();
-    }
-
-    public boolean isSendingFile() {
-        return sendingFile;
-    }
-
-    public void setSendingFile(boolean sendingFile) {
-        this.sendingFile = sendingFile;
     }
 }

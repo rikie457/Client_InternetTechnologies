@@ -4,7 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.util.ArrayList;
 
 public class Client extends JFrame implements Runnable {
@@ -111,11 +112,10 @@ public class Client extends JFrame implements Runnable {
             panel.add(sendFile);
 
             clientlistButton.addActionListener(actionEvent -> {
-
+                util.sendMessage("CLIENTLIST");
             });
 
             DirectMessageButton.addActionListener(actionEvent -> {
-                System.out.println("Opening DirectMessageWindow");
                 util.sendMessage("CLIENTLIST-DM");
             });
         }
@@ -156,21 +156,9 @@ public class Client extends JFrame implements Runnable {
         }
 
         sendFile.addActionListener(actionEvent -> {
-            util.sendMessage("NEWFILE");
-
-            try {
-                JFileChooser chooser = new JFileChooser();
-                int returnVal = chooser.showOpenDialog(null);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    System.out.println("You chose to open this file: " + chooser.getSelectedFile().getName());
-
-                    sendFile(chooser.getSelectedFile().getPath());
-                }
-
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            util.sendMessage("UPLOADFILE");
+            Thread fileHandler = new Thread(new FileHandler(host, port + 1, connection));
+            fileHandler.start();
         });
 
         send.setEnabled(false);
@@ -246,36 +234,6 @@ public class Client extends JFrame implements Runnable {
 
     void serverMessage(String message) {
         this.text.append(message + '\n');
-    }
-
-    public void sendFile(String inputFilePath) {
-        message.setSendingFile(true);
-        try {
-            File myFile = new File(inputFilePath);
-            byte[] mybytearray = new byte[(int) myFile.length()];
-
-            FileInputStream fis = new FileInputStream(myFile);
-
-            DataInputStream dis = new DataInputStream(fis);
-            dis.readFully(mybytearray, 0, mybytearray.length);
-
-            OutputStream os = connection.getOutput();
-
-            //Sending file name and file size to the server
-            DataOutputStream dos = new DataOutputStream(os);
-            dos.writeUTF(myFile.getName());
-            System.out.println(myFile.getName());
-            dos.writeLong(mybytearray.length);
-            System.out.println(mybytearray.length);
-            dos.write(mybytearray, 0, mybytearray.length);
-            dos.flush();
-
-            message.setSendingFile(false);
-
-
-        } catch (Exception e) {
-            e.getStackTrace();
-        }
     }
 }
 

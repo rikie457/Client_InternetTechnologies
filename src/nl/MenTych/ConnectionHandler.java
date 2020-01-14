@@ -26,7 +26,7 @@ public class ConnectionHandler {
 
 
         } catch (IOException e) {
-            e.getStackTrace();
+            e.printStackTrace();
         }
     }
 

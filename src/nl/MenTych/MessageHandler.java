@@ -174,7 +174,7 @@ public class MessageHandler implements Runnable {
             }
 
         } catch (IOException e) {
-            e.getStackTrace();
+            e.printStackTrace();
             ct.stop();
 
             kill();

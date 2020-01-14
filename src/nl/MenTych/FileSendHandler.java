@@ -42,7 +42,7 @@ public class FileSendHandler implements Runnable {
                 this.kill();
             }
         } catch (IOException e) {
-            e.getStackTrace();
+            e.printStackTrace();
             System.out.println("SOMETHING WHEN WRONG WHILE INITIATING CONNECTION STOPPING");
             kill();
         }
@@ -69,7 +69,7 @@ public class FileSendHandler implements Runnable {
             dos.flush();
             mainutil.sendMessage("DONEFILE");
         } catch (IOException e) {
-            e.getStackTrace();
+            e.printStackTrace();
             System.out.println("SOMETHING WHEN WRONG  WHILE SENDING FILE STOPPING");
             kill();
         }

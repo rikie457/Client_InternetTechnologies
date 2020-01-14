@@ -37,6 +37,7 @@ public class FileRecieveHandler implements Runnable {
             thisutil.sendMessage("FILESENDREADY");
             recieveFile();
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("SOMETHING WHEN WRONG WHILE INITIATING CONNECTION STOPPING");
             kill();
         }
@@ -72,7 +73,7 @@ public class FileRecieveHandler implements Runnable {
             if (file.exists()) desktop.open(file);
             mainutil.sendMessage("DONEFILE");
         } catch (IOException e) {
-            e.getStackTrace();
+            e.printStackTrace();
             System.out.println("SOMETHING WHEN WRONG  WHILE RECIEVING FILE STOPPING");
             kill();
         }

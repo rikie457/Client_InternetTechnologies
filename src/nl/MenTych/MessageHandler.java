@@ -21,7 +21,7 @@ public class MessageHandler implements Runnable {
         this.reader = connection.getReader();
         this.ct = ct;
         this.text = text;
-        this.util = new Util(writer);
+        this.util = new Util(writer, ct.getUsername());
     }
 
     @Override
@@ -48,8 +48,7 @@ public class MessageHandler implements Runnable {
 
             while (true) {
                 line = this.reader.readUTF();
-                System.out.println(this.ct.username + ": " + line);
-
+                System.out.println(this.ct.username + " RECIEVING: " + line);
                     String[] splits = line.split("\\s+");
 
                     if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
@@ -140,9 +139,11 @@ public class MessageHandler implements Runnable {
                                 break;
 
                             case "+OK RECIEVEFILE":
-                                FileRecieveHandler fileRecieveHandler = new FileRecieveHandler(ct.getHost(), ct.getPort() + 1, ct.getConnection(), splits[2]);
+                                FileRecieveHandler fileRecieveHandler = new FileRecieveHandler(ct.getHost(), ct.getPort() + 1, ct.getConnection(), splits[2], ct);
                                 Thread filereciever = new Thread(fileRecieveHandler);
                                 filereciever.start();
+
+                                break;
 
                             case "DSCN Pong":
                                 ct.stop();
@@ -173,10 +174,9 @@ public class MessageHandler implements Runnable {
 
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             ct.stop();
-
             kill();
         }
     }
@@ -216,6 +216,11 @@ public class MessageHandler implements Runnable {
     }
 
     void kill() {
+        try {
+            this.ct.getConnection().getSocket().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Thread.currentThread().stop();
     }
 }

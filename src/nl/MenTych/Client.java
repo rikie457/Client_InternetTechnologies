@@ -60,7 +60,7 @@ public class Client extends JFrame implements Runnable {
         connection = new ConnectionHandler(host, port);
         writer = connection.getWriter();
 
-        this.util = new Util(writer);
+        this.util = new Util(writer, getUsername());
 
         util.sendMessage("HELO " + username);
 
@@ -224,6 +224,10 @@ public class Client extends JFrame implements Runnable {
 
     public int getPort() {
         return port;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public ConnectionHandler getConnection() {

@@ -1,7 +1,9 @@
 package nl.MenTych;
 
-import java.awt.*;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class FileRecieveHandler implements Runnable {
 
@@ -61,17 +63,8 @@ public class FileRecieveHandler implements Runnable {
                 output.write(buffer, 0, bytesRead);
                 size -= bytesRead;
             }
-
             output.close();
-
-            if (!Desktop.isDesktopSupported()) {
-                System.out.println("Desktop is not supported");
-                return;
-            }
-
-            Desktop desktop = Desktop.getDesktop();
-            File file = new File("files/" + fileName);
-            if (file.exists()) desktop.open(file);
+            mainutil.sendMessage("RECIEVEDFILE " + fileName);
             kill();
         } catch (IOException e) {
             e.printStackTrace();

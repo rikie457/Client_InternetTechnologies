@@ -3,6 +3,7 @@ package nl.MenTych;
 import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 
 
 public class MessageHandler implements Runnable {
@@ -46,14 +47,12 @@ public class MessageHandler implements Runnable {
             ct.input.setEnabled(true);
 
             while (true) {
-
-                    line = this.reader.readUTF();
-                    System.out.println(line);
+                line = this.reader.readUTF();
+                System.out.println(this.ct.username + ": " + line);
 
                     String[] splits = line.split("\\s+");
 
                     if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
-                        System.out.println(splits[0] + " " + splits[1]);
                         switch (splits[0] + " " + splits[1]) {
 
                             case "-ERR NOSUCHGROUP":
@@ -140,6 +139,11 @@ public class MessageHandler implements Runnable {
                                 System.out.println("VERSION 2");
                                 break;
 
+                            case "+OK RECIEVEFILE":
+                                FileRecieveHandler fileRecieveHandler = new FileRecieveHandler(ct.getHost(), ct.getPort() + 1, ct.getConnection(), splits[2]);
+                                Thread filereciever = new Thread(fileRecieveHandler);
+                                filereciever.start();
+
                             case "DSCN Pong":
                                 ct.stop();
                                 System.out.println("STOPPING CLIENT");
@@ -169,8 +173,10 @@ public class MessageHandler implements Runnable {
 
             }
 
-        } catch (Exception e) {
+        } catch (IOException e) {
+            e.printStackTrace();
             ct.stop();
+
             kill();
         }
     }

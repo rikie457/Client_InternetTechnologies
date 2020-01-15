@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
 
@@ -12,14 +11,11 @@ public class Client extends JFrame implements Runnable {
 
     public ArrayList<DirectMessageClient> openDirectMessages = new ArrayList<>();
     private ConnectionHandler connection;
-    private DataInputStream reader;
     private DataOutputStream writer;
     String username, currentgroup = "";
     private String host;
     private int port;
     private Thread messageHandler;
-    private MessageHandler message;
-
     private JPanel panel;
     private JTextArea text = new JTextArea(20, 20);
     private JScrollPane scroll;
@@ -29,7 +25,7 @@ public class Client extends JFrame implements Runnable {
     ArrayList<String> clientListGroup = new ArrayList<>();
 
     JTextField input;
-    JButton send, clientlistButton, kickFromGroupButton, leavegroupButton, addgroupButton, joingroupButton, removegroupButton, sendFile;
+    JButton send, clientlistButton, kickFromGroupButton, leavegroupButton, addgroupButton, joingroupButton, removegroupButton;
     private Util util;
 
     public Client(String host, int port, String username) {
@@ -61,22 +57,17 @@ public class Client extends JFrame implements Runnable {
             }
         });
 
-        try {
-            connection = new ConnectionHandler(host, port);
-            reader = connection.getReader();
-            writer = connection.getWriter();
+        connection = new ConnectionHandler(host, port);
+        writer = connection.getWriter();
 
-            this.util = new Util(writer);
+        this.util = new Util(writer);
 
-            util.sendMessage("HELO " + username);
+        util.sendMessage("HELO " + username);
 
-            // starting messageHandler in new Thread.
-            message = new MessageHandler(connection, text, this);
-            messageHandler = new Thread(message);
-            messageHandler.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // starting messageHandler in new Thread.
+        MessageHandler message = new MessageHandler(connection, text, this);
+        messageHandler = new Thread(message);
+        messageHandler.start();
     }
 
     void createUI(Client frame, int level, boolean groupOwner) {
@@ -93,8 +84,6 @@ public class Client extends JFrame implements Runnable {
         removegroupButton = new JButton("Delete Current Group");
         leavegroupButton = new JButton("Leave Current Group");
         kickFromGroupButton = new JButton("Kick user from Current Group");
-        sendFile = new JButton("Send a File");
-
 
         panel.setLayout(new FlowLayout());
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -109,7 +98,6 @@ public class Client extends JFrame implements Runnable {
         if (level == 2) {
             panel.add(clientlistButton);
             panel.add(DirectMessageButton);
-            panel.add(sendFile);
 
             clientlistButton.addActionListener(actionEvent -> {
                 util.sendMessage("CLIENTLIST");
@@ -118,72 +106,67 @@ public class Client extends JFrame implements Runnable {
             DirectMessageButton.addActionListener(actionEvent -> {
                 util.sendMessage("CLIENTLIST-DM");
             });
-        }
 
-        if (!groupOwner && frame.currentgroup.equals("Main")) {
-            addgroupButton.addActionListener(actionEvent -> {
-                String groupname = JOptionPane.showInputDialog(this, "Group name:");
-                if (groupname != null) {
-                    util.sendMessage("GROUPCREATE " + username + " " + groupname);
-                }
-            });
 
-            joingroupButton.addActionListener(actionEvent -> {
-                String groupname = JOptionPane.showInputDialog(this, "Group name:");
-                if (groupname != null) {
-                    util.sendMessage("GROUPJOIN " + groupname);
-                }
-            });
+            if (!groupOwner && frame.currentgroup.equals("Main")) {
+                addgroupButton.addActionListener(actionEvent -> {
+                    String groupname = JOptionPane.showInputDialog(this, "Group name:");
+                    if (groupname != null) {
+                        util.sendMessage("GROUPCREATE " + username + " " + groupname);
+                    }
+                });
 
-            panel.add(addgroupButton);
-            panel.add(joingroupButton);
-        } else if (!groupOwner) {
-            leavegroupButton.addActionListener(actionEvent -> {
-                util.sendMessage("LEAVEGROUP");
-            });
-            panel.add(leavegroupButton);
-        } else {
-            kickFromGroupButton.addActionListener(actionEvent -> {
-                util.sendMessage("CLIENTLIST-GROUP");
-            });
+                joingroupButton.addActionListener(actionEvent -> {
+                    String groupname = JOptionPane.showInputDialog(this, "Group name:");
+                    if (groupname != null) {
+                        util.sendMessage("GROUPJOIN " + groupname);
+                    }
+                });
 
-            removegroupButton.addActionListener(actionEvent -> {
-                util.sendMessage("GROUPREMOVE " + currentgroup + " " + username);
-            });
+                panel.add(addgroupButton);
+                panel.add(joingroupButton);
+            } else if (!groupOwner) {
+                leavegroupButton.addActionListener(actionEvent -> {
+                    util.sendMessage("LEAVEGROUP");
+                });
+                panel.add(leavegroupButton);
+            } else {
+                kickFromGroupButton.addActionListener(actionEvent -> {
+                    util.sendMessage("CLIENTLIST-GROUP");
+                });
 
-            panel.add(kickFromGroupButton);
-            panel.add(removegroupButton);
-        }
+                removegroupButton.addActionListener(actionEvent -> {
+                    util.sendMessage("GROUPREMOVE " + currentgroup + " " + username);
+                });
 
-        sendFile.addActionListener(actionEvent -> {
-            util.sendMessage("UPLOADFILE");
-            Thread fileHandler = new Thread(new FileHandler(host, port + 1, connection));
-            fileHandler.start();
-        });
-
-        send.setEnabled(false);
-        send.addActionListener(actionEvent -> {
-            String message = input.getText();
-
-            if (message.equals("Disconnect")) {
-                util.sendMessage("QUIT");
-                messageHandler.stop();
-
-                // connection to server is lost or user is disconnected.
-                text.append("Disconnected from the server\n");
+                panel.add(kickFromGroupButton);
+                panel.add(removegroupButton);
             }
 
-            if (message.length() > 0) {
-                util.sendMessage("BCST " + message);
-            }
+            send.setEnabled(false);
+            send.addActionListener(actionEvent -> {
+                String message = input.getText();
+
+                if (message.equals("Disconnect")) {
+                    util.sendMessage("QUIT");
+                    messageHandler.stop();
+
+                    // connection to server is lost or user is disconnected.
+                    text.append("Disconnected from the server\n");
+                }
+
+                if (message.length() > 0) {
+                    util.sendMessage("BCST " + message);
+                }
 
 
-            //Scroll down and clear the input
-            JScrollBar vertical = scroll.getVerticalScrollBar();
-            vertical.setValue(vertical.getMaximum());
-            input.setText("");
+                //Scroll down and clear the input
+                JScrollBar vertical = scroll.getVerticalScrollBar();
+                vertical.setValue(vertical.getMaximum());
+                input.setText("");
 
-        });
+            });
+        }
 
         frame.setContentPane(panel);
         frame.setTitle(username);
@@ -198,7 +181,6 @@ public class Client extends JFrame implements Runnable {
     }
 
     void openDirectMessageWindow(ArrayList<String> userlist, boolean groupKick) {
-        System.out.println(userlist.size());
         if (userlist.size() > 1) {
             Thread DM;
             if (groupKick) {
@@ -235,5 +217,18 @@ public class Client extends JFrame implements Runnable {
     void serverMessage(String message) {
         this.text.append(message + '\n');
     }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public ConnectionHandler getConnection() {
+        return connection;
+    }
+
 }
 

@@ -4,10 +4,10 @@ import java.io.*;
 
 public class FileRecieveHandler implements Runnable {
 
-    private String host, filename;
+    private String host;
     private int port;
     private ConnectionHandler connection, mainConnection;
-    private Util mainutil, thisutil;
+    private Util mainutil;
     private Client client;
 
 
@@ -15,7 +15,6 @@ public class FileRecieveHandler implements Runnable {
         this.host = host;
         this.port = port;
         this.mainConnection = connection;
-        this.filename = filename;
         this.client = client;
     }
 
@@ -30,7 +29,7 @@ public class FileRecieveHandler implements Runnable {
         System.out.println(port);
         System.out.println(host);
         mainutil = new Util(mainConnection.getWriter(), client.getUsername());
-        thisutil = new Util(connection.getWriter(), "FILERECIEVER FOR " + client.getUsername());
+        Util thisutil = new Util(connection.getWriter(), "FILERECIEVER FOR " + client.getUsername());
         try {
             boolean ready = false;
             while (!ready) {

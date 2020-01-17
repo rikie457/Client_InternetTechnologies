@@ -6,7 +6,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +19,7 @@ public class Client extends JFrame implements Runnable {
     public ArrayList<DirectMessageClient> openDirectMessages = new ArrayList<>();
     private ConnectionHandler connection;
     private DataOutputStream writer;
-    String username, currentgroup = "";
+    private String username, currentgroup = "";
     private String host;
     private int port;
     private Thread messageHandler;
@@ -55,18 +57,15 @@ public class Client extends JFrame implements Runnable {
             public void windowClosing(WindowEvent e) {
                 util.sendMessage("QUIT");
                 messageHandler.stop();
-                for (DirectMessageClient c : openDirectMessages) {
-                    c.dispose();
-                }
-                frame.dispose();
-                removeKeys();
+                stop();
             }
         });
 
         try {
             connection = new ConnectionHandler(host, port);
         } catch (Exception e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, e.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+            stop();
         }
         writer = connection.getWriter();
 
@@ -201,8 +200,15 @@ public class Client extends JFrame implements Runnable {
     }
 
     void stop() {
+        System.out.println("STOPPING CLIENT");
+        for (DirectMessageClient c : openDirectMessages) {
+            c.dispose();
+        }
+        this.dispose();
+        removeKeys();
         Thread.currentThread().stop();
     }
+
 
     void openDirectMessageWindow(ArrayList<String> userlist, boolean groupKick) {
         if (userlist.size() > 1) {
@@ -264,5 +270,12 @@ public class Client extends JFrame implements Runnable {
         return connection;
     }
 
+    public String getCurrentgroup() {
+        return currentgroup;
+    }
+
+    public void setCurrentgroup(String currentgroup) {
+        this.currentgroup = currentgroup;
+    }
 }
 

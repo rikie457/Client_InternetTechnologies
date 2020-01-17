@@ -6,7 +6,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataOutputStream;
 import java.security.PublicKey;
-import java.util.Arrays;
 
 public class DirectMessageClient extends JFrame implements Runnable {
 
@@ -27,8 +26,8 @@ public class DirectMessageClient extends JFrame implements Runnable {
         this.reciever = reciever;
         this.util = new Util(writer, ct.getUsername());
 
-        new Guard(this.sender.username, 2048);
-        this.encryption = new Encryption(this.sender.username);
+        new Guard(this.sender.getUsername(), 2048);
+        this.encryption = new Encryption(this.sender.getUsername());
     }
 
     @Override
@@ -76,7 +75,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
             if (message.length() > 0) {
                 String encryptedtext = encryption.encryptText(message, recieversPublicKey);
 
-                util.sendMessage("DM " + reciever + " " + this.sender.username + " " + encryptedtext);
+                util.sendMessage("DM " + reciever + " " + this.sender.getUsername() + " " + encryptedtext);
                 appendToTextView("You send an encrypted message: " + message);
             }
 
@@ -102,7 +101,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
         PublicKey pubKey = this.encryption.getPublic();
         byte[] keyBytes = pubKey.getEncoded();
 
-        util.sendMessage("+KEY PUBLIC "  + reciever + " " + this.sender.username);
+        util.sendMessage("+KEY PUBLIC " + reciever + " " + this.sender.getUsername());
         util.sendBytes(keyBytes);
     }
 

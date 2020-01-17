@@ -1,7 +1,9 @@
 package nl.MenTych;
 
-import java.awt.*;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class FileRecieveHandler implements Runnable {
 
@@ -9,22 +11,25 @@ public class FileRecieveHandler implements Runnable {
     private int port;
     private ConnectionHandler connection, mainConnection;
     private Util mainutil, thisutil;
+    private Client client;
 
 
-    public FileRecieveHandler(String host, int port, ConnectionHandler connection, String filename) {
+    public FileRecieveHandler(String host, int port, ConnectionHandler connection, String filename, Client client) {
         this.host = host;
         this.port = port;
         this.mainConnection = connection;
         this.filename = filename;
+        this.client = client;
     }
 
     @Override
     public void run() {
 
         connection = new ConnectionHandler(host, port);
-        mainutil = new Util(mainConnection.getWriter());
-        thisutil = new Util(connection.getWriter());
-        mainutil.sendMessage("DOWNLOADFILE " + filename);
+        System.out.println(port);
+        System.out.println(host);
+        mainutil = new Util(mainConnection.getWriter(), client.getUsername());
+        thisutil = new Util(connection.getWriter(), "FILERECIEVER FOR " + client.getUsername());
         try {
             boolean ready = false;
             while (!ready) {
@@ -32,8 +37,6 @@ public class FileRecieveHandler implements Runnable {
                     ready = true;
                 }
             }
-
-
             thisutil.sendMessage("FILESENDREADY");
             recieveFile();
         } catch (IOException e) {
@@ -60,18 +63,9 @@ public class FileRecieveHandler implements Runnable {
                 output.write(buffer, 0, bytesRead);
                 size -= bytesRead;
             }
-
             output.close();
-
-            if (!Desktop.isDesktopSupported()) {
-                System.out.println("Desktop is not supported");
-                return;
-            }
-
-            Desktop desktop = Desktop.getDesktop();
-            File file = new File("files/" + fileName);
-            if (file.exists()) desktop.open(file);
-            mainutil.sendMessage("DONEFILE");
+            mainutil.sendMessage("RECIEVEDFILE " + fileName);
+            kill();
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("SOMETHING WHEN WRONG  WHILE RECIEVING FILE STOPPING");
@@ -80,7 +74,12 @@ public class FileRecieveHandler implements Runnable {
     }
 
     void kill() {
-        System.out.println("STOPPING");
+        try {
+            connection.getSocket().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("STOPPING FILERECIEVEHANDLER " + client.getUsername());
         Thread.currentThread().stop();
     }
 

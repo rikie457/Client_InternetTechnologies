@@ -24,7 +24,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
         this.sender = ct;
         this.sender.openDirectMessages.add(this);
         this.reciever = reciever;
-        this.util = new Util(writer);
+        this.util = new Util(writer, ct.getUsername());
 
         this.encryption = new Encryption();
     }
@@ -86,8 +86,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
         });
 
         sendFile.addActionListener(actionEvent -> {
-            util.sendMessage("UPLOADFILE " + reciever);
-            Thread fileHandler = new Thread(new FileSendHandler(sender.getHost(), sender.getPort() + 1, sender.getConnection()));
+            Thread fileHandler = new Thread(new FileSendHandler(sender.getHost(), sender.getPort() + 1, sender.getConnection(), reciever, sender));
             fileHandler.start();
         });
 

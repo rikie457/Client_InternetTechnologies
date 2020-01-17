@@ -5,9 +5,11 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataOutputStream;
+import java.security.PublicKey;
 
 public class DirectMessageClient extends JFrame implements Runnable {
 
+    private final Encryption encryption;
     private Client sender;
     private String reciever;
     private JTextArea text = new JTextArea(20, 20);
@@ -15,12 +17,16 @@ public class DirectMessageClient extends JFrame implements Runnable {
     private JTextField input;
     private Util util;
 
+    public PublicKey recieversPublicKey;
+
     public DirectMessageClient(String title, Client ct, String reciever, DataOutputStream writer) {
         this.setTitle("Direct Message to:" + title);
         this.sender = ct;
         this.sender.openDirectMessages.add(this);
         this.reciever = reciever;
         this.util = new Util(writer);
+
+        this.encryption = new Encryption();
     }
 
     @Override
@@ -66,6 +72,9 @@ public class DirectMessageClient extends JFrame implements Runnable {
             String message = input.getText();
 
             if (message.length() > 0) {
+                String encryptedtext = encryption.encryptText(message);
+                String decryptedtext = encryption.decryptText(encryptedtext);
+
                 util.sendMessage("DM " + reciever + " " + this.sender.username + " " + message);
                 appendToTextView("You: " + message);
             }
@@ -87,6 +96,8 @@ public class DirectMessageClient extends JFrame implements Runnable {
         frame.setSize(300, 450);
         frame.setResizable(false);
         frame.setVisible(true);
+
+        util.sendMessage("+KEY PUBLIC "  + reciever + " " + this.sender.username + " " + encryption.getPublic().toString().replace('\n', '~'));
     }
 
     public String getReciever() {

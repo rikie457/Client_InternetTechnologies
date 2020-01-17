@@ -149,6 +149,18 @@ public class MessageHandler implements Runnable {
                                 System.out.println("STOPPING CLIENT");
                                 kill();
                                 break;
+
+                            case "+KEY PUBLIC":
+                                String[] parts2 = line.split("\\+KEY PUBLIC ");
+
+                                String publickey = parts2[1];
+                                publickey = publickey.replace('~', '\n');
+
+                                System.out.println(publickey);
+
+                                System.out.println(Encryption.getfromStringPublic(publickey));
+
+                                break;
                         }
                     } else {
                         switch (splits[0]) {

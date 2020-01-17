@@ -36,14 +36,6 @@ public class FileSendHandler implements Runnable {
         try {
             mainutil = new Util(mainConnection.getWriter(), client.getUsername());
             mainutil.sendMessage("UPLOADFILE " + file.getName() + " " + reciever);
-
-            boolean readyserver = false;
-            while (!readyserver) {
-                if (mainConnection.getReader().readUTF().equals("+OK FILESERVEREADY")) {
-                    readyserver = true;
-                }
-            }
-
             connection = new ConnectionHandler(host, port);
             System.out.println(port);
             System.out.println(host);

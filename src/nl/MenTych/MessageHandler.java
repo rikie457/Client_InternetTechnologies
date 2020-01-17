@@ -116,7 +116,7 @@ public class MessageHandler implements Runnable {
 
             while (true) {
                 line = this.reader.readUTF();
-                //System.out.println(this.ct.username + " RECIEVING: " + line);
+                System.out.println(this.ct.username + " RECIEVING: " + line);
                 String[] splits = line.split("\\s+");
 
                 if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {

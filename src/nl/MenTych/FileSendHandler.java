@@ -2,7 +2,6 @@ package nl.MenTych;
 
 import javax.swing.*;
 import java.io.*;
-import java.net.ConnectException;
 
 public class FileSendHandler implements Runnable {
 
@@ -44,13 +43,13 @@ public class FileSendHandler implements Runnable {
 
     private void sendFile(File file) {
         try {
-            mainutil = new Util(mainConnection.getWriter(), client.getUsername());
+            mainutil = new Util(mainConnection.getWriter(), client);
             mainutil.sendMessage("UPLOADFILE " + file.getName() + " " + reciever);
 
             connection =  getConnection(host, port);
             System.out.println(port);
             System.out.println(host);
-            thisutil = new Util(connection.getWriter(), "FILESENDER FOR " + client.getUsername());
+            thisutil = new Util(connection.getWriter(), client);
 
             boolean ready = false;
             while (!ready) {

@@ -24,7 +24,7 @@ public class DirectMessageClient extends JFrame implements Runnable {
         this.sender = ct;
         this.sender.openDirectMessages.add(this);
         this.reciever = reciever;
-        this.util = new Util(writer, ct.getUsername());
+        this.util = new Util(writer, ct);
 
         new Guard(this.sender.getUsername(), 2048);
         this.encryption = new Encryption(this.sender.getUsername());

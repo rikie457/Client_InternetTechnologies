@@ -28,8 +28,8 @@ public class FileRecieveHandler implements Runnable {
         }
         System.out.println(port);
         System.out.println(host);
-        mainutil = new Util(mainConnection.getWriter(), client.getUsername());
-        Util thisutil = new Util(connection.getWriter(), "FILERECIEVER FOR " + client.getUsername());
+        mainutil = new Util(mainConnection.getWriter(), client);
+        Util thisutil = new Util(connection.getWriter(), client);
         try {
             boolean ready = false;
             while (!ready) {

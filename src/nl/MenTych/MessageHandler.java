@@ -24,7 +24,7 @@ public class MessageHandler implements Runnable {
         this.reader = connection.getReader();
         this.ct = ct;
         this.text = text;
-        this.util = new Util(writer, ct.getUsername());
+        this.util = new Util(writer, ct);
 
         this.encryption = new Encryption(ct.getUsername());
     }
@@ -122,7 +122,6 @@ public class MessageHandler implements Runnable {
 
                     if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
                         switch (splits[0] + " " + splits[1]) {
-
                             case "-ERR NOSUCHGROUP":
                                 JOptionPane.showMessageDialog(ct, "Group does not exist", "ERROR", JOptionPane.ERROR_MESSAGE);
                                 break;

@@ -69,7 +69,7 @@ public class Client extends JFrame implements Runnable {
         }
         writer = connection.getWriter();
 
-        this.util = new Util(writer, getUsername());
+        this.util = new Util(writer, this);
 
         util.sendMessage("HELO " + username);
 
@@ -233,6 +233,10 @@ public class Client extends JFrame implements Runnable {
             }
         }
         return false;
+    }
+
+    void openExceptionWindow(Client mainframe, String message) {
+        JOptionPane.showMessageDialog(mainframe, message, "ERROR", JOptionPane.ERROR_MESSAGE);
     }
 
     DirectMessageClient getDirectMessageClient(String username) {

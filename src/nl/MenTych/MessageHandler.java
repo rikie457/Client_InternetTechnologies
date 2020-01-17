@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.security.MessageDigest;
+import java.security.PublicKey;
 
 
 public class MessageHandler implements Runnable {
@@ -12,6 +13,8 @@ public class MessageHandler implements Runnable {
     private JTextArea text;
     private Client ct;
     private Util util;
+
+    private final Encryption encryption;
 
     /**
      * @param connection The message handler handles incomming messages from the server, including the heartbeat.
@@ -22,6 +25,8 @@ public class MessageHandler implements Runnable {
         this.ct = ct;
         this.text = text;
         this.util = new Util(writer, ct.getUsername());
+
+        this.encryption = new Encryption(ct.username);
     }
 
     private static String getFileChecksum(MessageDigest digest, File file) throws IOException {
@@ -61,8 +66,7 @@ public class MessageHandler implements Runnable {
             txt.append(": ");
 
             for (int i = 2; i < splits.length; i++) {
-                txt.append(splits[i]);
-                txt.append(" ");
+                txt.append(this.encryption.decryptText(splits[i]));
             }
             this.ct.getDirectMessageClient(splits[1]).appendToTextView(txt.toString());
 
@@ -112,7 +116,7 @@ public class MessageHandler implements Runnable {
 
             while (true) {
                 line = this.reader.readUTF();
-                System.out.println(this.ct.username + " RECIEVING: " + line);
+                //System.out.println(this.ct.username + " RECIEVING: " + line);
                 String[] splits = line.split("\\s+");
 
                 if (splits.length >= 2 && !splits[0].equals("BCST") && !splits[0].equals("+DM")) {
@@ -231,33 +235,29 @@ public class MessageHandler implements Runnable {
                             }
                             break;
 
-                            case "DSCN Pong":
-                                ct.stop();
-                                System.out.println("STOPPING CLIENT");
-                                kill();
-                                break;
-
-                            case "+KEY PUBLIC":
-                                String[] parts2 = line.split("\\+KEY PUBLIC ");
-
-                                String publickey = parts2[1];
-                                publickey = publickey.replace('~', '\n');
-
-                                System.out.println(publickey);
-
-                                System.out.println(Encryption.getfromStringPublic(publickey));
-
-                                break;
-                        }
-                    } else {
-                        switch (splits[0]) {
-                            case "PING":
-                                sendHeartbeat();
-                                break;
                         case "DSCN Pong":
                             ct.stop();
                             System.out.println("STOPPING CLIENT");
                             kill();
+                            break;
+
+                        case "+KEY PUBLIC":
+                            try {
+                                int xtr = 0;
+
+                                byte[] buffer = new byte[1024];
+
+                                while (this.reader.read(buffer) == -1) {
+                                    xtr++;
+                                }
+
+                                PublicKey pubkey = Encryption.getPublicKeyReciever(buffer);
+                                DirectMessageClient dmc = this.ct.getDirectMessageClient(splits[2]);
+                                dmc.recieversPublicKey = pubkey;
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
                             break;
                     }
                 } else {
@@ -277,6 +277,12 @@ public class MessageHandler implements Runnable {
 
                         case "+DM":
                             pushContentToTextView(splits, false);
+                            break;
+
+                        case "DSCN Pong":
+                            ct.stop();
+                            System.out.println("STOPPING CLIENT");
+                            kill();
                             break;
                     }
                 }

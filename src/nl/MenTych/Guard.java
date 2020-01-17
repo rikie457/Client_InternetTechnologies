@@ -13,11 +13,13 @@ public class Guard {
 
     final static String PRIVATEKEYPATH = "KeyPair/privateKey";
     final static String PUBLICKEYPATH = "KeyPair/publicKey";
+    public String clientname;
 
-    public Guard(int keylength) {
+    public Guard(String client, int keylength) {
         try {
             this.keyGen = KeyPairGenerator.getInstance("RSA");
             this.keyGen.initialize(keylength);
+            this.clientname = client;
             this.createKeys();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -47,7 +49,7 @@ public class Guard {
     }
 
     public void writeToFile(String path, byte[] key) throws IOException {
-        File f = new File(path);
+        File f = new File("keys/" + this.clientname + "/" + path);
         f.getParentFile().mkdirs();
 
         FileOutputStream fos = new FileOutputStream(f);

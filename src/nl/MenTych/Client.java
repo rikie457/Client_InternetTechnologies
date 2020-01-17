@@ -5,7 +5,12 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Client extends JFrame implements Runnable {
 
@@ -54,6 +59,7 @@ public class Client extends JFrame implements Runnable {
                     c.dispose();
                 }
                 frame.dispose();
+                removeKeys();
             }
         });
 
@@ -68,6 +74,20 @@ public class Client extends JFrame implements Runnable {
         MessageHandler message = new MessageHandler(connection, text, this);
         messageHandler = new Thread(message);
         messageHandler.start();
+    }
+
+    void removeKeys() {
+        try (Stream<Path> walk = Files.walk(Paths.get("keys"))) {
+
+            List<String> result = walk.filter(Files::isDirectory)
+                    .map(x -> x.toString())
+                    .collect(Collectors.toList());
+
+            result.forEach(System.out::println);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void createUI(Client frame, int level, boolean groupOwner) {
@@ -206,10 +226,16 @@ public class Client extends JFrame implements Runnable {
     }
 
     DirectMessageClient getDirectMessageClient(String username) {
-        for (DirectMessageClient dm : openDirectMessages) {
-            if (dm.getReciever().equals(username)) {
-                return dm;
+        if (isDirectMessageWindowOpen(username)) {
+            for (DirectMessageClient dm : openDirectMessages) {
+                if (dm.getReciever().equals(username)) {
+                    return dm;
+                }
             }
+        } else {
+            Thread t = new Thread(new DirectMessageClient(username, this, username, writer));
+            t.start();
+            return getDirectMessageClient(username);
         }
         return null;
     }

@@ -1,5 +1,7 @@
 package nl.MenTych;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.Socket;
 
@@ -18,6 +20,7 @@ public class ConnectionHandler {
         this.port = port;
 
         try {
+            System.out.println("Connecting to " + host + " on " + port);
             this.socket = new Socket(host, port);
             this.input = socket.getInputStream();
             this.output = socket.getOutputStream();

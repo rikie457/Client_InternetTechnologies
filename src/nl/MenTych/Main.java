@@ -30,9 +30,9 @@ public class Main {
 
 
         button.addActionListener(actionEvent -> {
-            String username = usernameinput.getText();
+            String username = usernameinput.getText().replace(' ', '_');
 
-            if (!username.replace(" ", "_").matches("(\\w)\\w+") && username.length() < 3) {
+            if (!username.matches("^\\w+$") || username.length() < 3) {
                 //Username is not correct so try again also make text red.
                 usernameinput.setForeground(Color.red);
             } else {

@@ -2,6 +2,7 @@ package nl.MenTych;
 
 import javax.swing.*;
 import java.io.*;
+import java.net.ConnectException;
 
 public class FileSendHandler implements Runnable {
 
@@ -23,20 +24,30 @@ public class FileSendHandler implements Runnable {
 
     @Override
     public void run() {
-            JFileChooser chooser = new JFileChooser();
-            int returnVal = chooser.showOpenDialog(null);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                sendFile(chooser.getSelectedFile());
-            } else {
-                this.kill();
-            }
+        JFileChooser chooser = new JFileChooser();
+        int returnVal = chooser.showOpenDialog(null);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            sendFile(chooser.getSelectedFile());
+        } else {
+            this.kill();
         }
+    }
+
+    private ConnectionHandler getConnection(String host, int port) {
+        try {
+            System.out.println("Con established");
+             return new ConnectionHandler(host, port);
+        } catch (Exception e) {
+            return getConnection(host, port);
+        }
+    }
 
     private void sendFile(File file) {
         try {
             mainutil = new Util(mainConnection.getWriter(), client.getUsername());
             mainutil.sendMessage("UPLOADFILE " + file.getName() + " " + reciever);
-            connection = new ConnectionHandler(host, port);
+
+            connection =  getConnection(host, port);
             System.out.println(port);
             System.out.println(host);
             thisutil = new Util(connection.getWriter(), "FILESENDER FOR " + client.getUsername());
@@ -70,7 +81,7 @@ public class FileSendHandler implements Runnable {
             System.out.println("SOMETHING WHEN WRONG  WHILE SENDING FILE STOPPING");
             kill();
         }
-        }
+    }
 
     void kill() {
         try {

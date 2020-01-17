@@ -63,7 +63,11 @@ public class Client extends JFrame implements Runnable {
             }
         });
 
-        connection = new ConnectionHandler(host, port);
+        try {
+            connection = new ConnectionHandler(host, port);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         writer = connection.getWriter();
 
         this.util = new Util(writer, getUsername());

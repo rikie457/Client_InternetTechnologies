@@ -1,9 +1,6 @@
 package nl.MenTych;
 
-import java.io.DataInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 public class FileRecieveHandler implements Runnable {
 
@@ -25,7 +22,11 @@ public class FileRecieveHandler implements Runnable {
     @Override
     public void run() {
 
-        connection = new ConnectionHandler(host, port);
+        try {
+            connection = new ConnectionHandler(host, port);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         System.out.println(port);
         System.out.println(host);
         mainutil = new Util(mainConnection.getWriter(), client.getUsername());
@@ -55,6 +56,10 @@ public class FileRecieveHandler implements Runnable {
             DataInputStream clientData = new DataInputStream(in);
 
             String fileName = clientData.readUTF();
+
+            File file = new File("files");
+            boolean bool = file.mkdir();
+
             FileOutputStream output = new FileOutputStream("files/" + fileName);
 
             long size = clientData.readLong();

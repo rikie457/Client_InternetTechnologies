@@ -15,22 +15,17 @@ public class ConnectionHandler {
     private DataInputStream reader;
     private DataOutputStream writer;
 
-    public ConnectionHandler(String host, int port) {
+    public ConnectionHandler(String host, int port) throws Exception {
         this.host = host;
         this.port = port;
 
-        try {
-            System.out.println("Connecting to " + host + " on " + port);
-            this.socket = new Socket(host, port);
-            this.input = socket.getInputStream();
-            this.output = socket.getOutputStream();
-            this.reader = new DataInputStream(this.input);
-            this.writer = new DataOutputStream(this.output);
+        System.out.println("Connecting to " + host + " on " + port);
+        this.socket = new Socket(host, port);
+        this.input = socket.getInputStream();
+        this.output = socket.getOutputStream();
+        this.reader = new DataInputStream(this.input);
+        this.writer = new DataOutputStream(this.output);
 
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     Socket getSocket() {

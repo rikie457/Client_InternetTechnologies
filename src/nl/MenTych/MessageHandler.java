@@ -212,6 +212,10 @@ public class MessageHandler implements Runnable {
                             filereciever.start();
                             break;
 
+                        case "+OK FILESERVEREADY":
+
+                            break;
+
                         case "+OK CHECKSUM":
                             String filename = splits[2];
                             String serverChecksum = splits[3];

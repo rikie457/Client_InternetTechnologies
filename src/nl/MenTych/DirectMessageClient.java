@@ -87,7 +87,9 @@ public class DirectMessageClient extends JFrame implements Runnable {
         });
 
         sendFile.addActionListener(actionEvent -> {
-            Thread fileHandler = new Thread(new FileSendHandler(sender.getHost(), sender.getPort() + 1, sender.getConnection(), reciever, sender));
+            FileSendHandler fsh = new FileSendHandler(sender.getHost(), sender.getPort() + 1, sender.getConnection(), reciever, sender);
+
+            Thread fileHandler = new Thread(fsh);
             fileHandler.start();
         });
 

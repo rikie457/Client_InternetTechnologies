@@ -225,10 +225,6 @@ public class MessageHandler implements Runnable {
                                 filereciever.start();
                                 break;
 
-                            case "+OK FILESERVEREADY":
-
-                                break;
-
                             case "+OK CHECKSUM":
                                 String filename = splits[2];
                                 String serverChecksum = splits[3];
@@ -253,7 +249,6 @@ public class MessageHandler implements Runnable {
                                 break;
 
                             case "DSCN Pong":
-                                ct.stop();
                                 System.out.println("STOPPING CLIENT");
                                 kill();
                                 break;

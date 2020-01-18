@@ -34,7 +34,6 @@ public class FileSendHandler implements Runnable {
 
     private ConnectionHandler getConnection(String host, int port) {
         try {
-            System.out.println("Con established");
              return new ConnectionHandler(host, port);
         } catch (Exception e) {
             return getConnection(host, port);

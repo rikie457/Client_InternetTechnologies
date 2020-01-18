@@ -29,10 +29,11 @@ public class Client extends JFrame implements Runnable {
     private JButton DirectMessageButton;
 
     ArrayList<String> clientList = new ArrayList<>();
+    ArrayList<String> groupList = new ArrayList<>();
     ArrayList<String> clientListGroup = new ArrayList<>();
 
     JTextField input;
-    JButton send, clientlistButton, kickFromGroupButton, leavegroupButton, addgroupButton, joingroupButton, removegroupButton;
+    JButton send, grouplistButton, clientlistButton, kickFromGroupButton, leavegroupButton, addgroupButton, joingroupButton, removegroupButton;
     private Util util;
 
     public Client(String host, int port, String username) {
@@ -102,6 +103,7 @@ public class Client extends JFrame implements Runnable {
         clientlistButton = new JButton("Clientlist");
         DirectMessageButton = new JButton("Direct Message");
         clientlistButton = new JButton("Clientlist");
+        grouplistButton = new JButton("Grouplist");
         addgroupButton = new JButton("Create Group");
         joingroupButton = new JButton("Join Group");
         removegroupButton = new JButton("Delete Current Group");
@@ -120,10 +122,15 @@ public class Client extends JFrame implements Runnable {
 
         if (level == 2) {
             panel.add(clientlistButton);
+            panel.add(grouplistButton);
             panel.add(DirectMessageButton);
 
             clientlistButton.addActionListener(actionEvent -> {
                 util.sendMessage("CLIENTLIST");
+            });
+
+            grouplistButton.addActionListener(actionEvent -> {
+                util.sendMessage("GROUPLIST");
             });
 
             DirectMessageButton.addActionListener(actionEvent -> {

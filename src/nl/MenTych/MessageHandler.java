@@ -174,6 +174,17 @@ public class MessageHandler implements Runnable {
                                 }
                                 break;
 
+                            case "+OK GROUPLIST":
+                                String[] groups = line.replaceAll("[*+OK GROUPLIST $]", "").split(",");
+                                ct.groupList.clear();
+
+                                messageRecieved("Grouplist" + ":");
+                                for (String group : groups) {
+                                    ct.groupList.add(group);
+                                    messageRecieved(" - " + group);
+                                }
+                                break;
+
                             case "+OK CLIENTLIST-DM":
                                 String[] users = line.replaceAll("\\WOK \\bCLIENTLIST-DM[\\s]", "").split(",");
                                 ct.clientList.clear();
